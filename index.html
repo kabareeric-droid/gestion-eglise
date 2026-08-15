@@ -9,9 +9,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion Église - Portail Officiel</title>
     <!-- Remplacement par le CDN Unpkg (Alternative ultra-stable à jsdelivr) -->
-    <link href="https://unpkg.com" rel="stylesheet">
+     <link href="https://cloudflare.com" rel="stylesheet">
     <!-- Chargement officiel direct de Supabase via Unpkg -->
-    <script src="https://unpkg.com"></script>
+    <script src="https://jsdelivr.net"></script>
 </head>
 <body class="bg-gray-100 font-sans min-h-screen flex items-center justify-center p-4">
 
@@ -165,7 +165,7 @@
         // CONFIGURATION CLOUD SUPABASE (À remplacer par vos clés)
         const SUPABASE_URL = "xgibabbmmhflhjocvykr";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnaWJhYmJtbWhmbGhqb2N2eWtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MTk3OTgsImV4cCI6MjEwMjM5NTc5OH0.WuXLVe7slbu3eS96SEbFLzh4nYmuiYr8pGuRlI8K8rc";
-        const supabase = supabasejs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let utilisateurCourant = null;
 
