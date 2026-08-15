@@ -2,179 +2,238 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <m<!DOCTYPE html>
+    <m<!DOCTYPE html><!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion Église - Portail Officiel</title>
-    <!-- Remplacement par le CDN Unpkg (Alternative ultra-stable à jsdelivr) -->
-     <link href="https://cloudflare.com" rel="stylesheet">
-    <!-- Chargement officiel direct de Supabase via Unpkg -->
-    <script src="https://jsdelivr.net"></script>
+    <!-- Le design est intégré directement ici pour contourner les blocages réseau locaux -->
+    <style>
+        body { background-color: #f3f4f6; font-family: sans-serif; padding: 1rem; min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
+        .max-w-6xl { width: 100%; max-width: 72rem; margin: 0 auto; }
+        .bg-white { background-color: #ffffff; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 1px solid #f3f4f6; }
+        .text-center { text-align: center; }
+        .hidden { display: none !important; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 768px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } .flex-row { flex-direction: row !important; } }
+        .header-app { background: white; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; align-items: center; border-bottom: 4px solid #1e3a8a; }
+        .card-stat { background: white; padding: 1.5rem; border-radius: 0.75rem; border-left: 4px solid; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .onglet-barre { display: flex; flex-wrap: wrap; background: #f9fafb; border-bottom: 1px solid #e5e7eb; border-radius: 0.75rem 0.75rem 0 0; }
+        .onglet-btn { flex: 1; padding: 0.75rem; font-weight: 600; font-size: 0.875rem; cursor: pointer; border: none; background: none; color: #6b7280; border-bottom: 2px solid transparent; }
+        .onglet-btn.actif { color: #1e3a8a; border-bottom-color: #1e3a8a; background: white; }
+        .form-saisie { background: #f9fafb; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; }
+        .input-text { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; box-sizing: border-box; }
+        .btn-valider { background: #1e3a8a; color: white; font-weight: bold; padding: 0.75rem; border: none; border-radius: 0.5rem; width: 100%; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; text-align: left; }
+        th, td { padding: 0.75rem; border-bottom: 1px solid #e5e7eb; }
+        th { background: #f3f4f6; color: #4b5563; font-size: 0.75rem; text-transform: uppercase; }
+    </style>
+    <!-- Code du moteur de connexion Supabase intégré directement (Plus aucun téléchargement externe requis !) -->
+    <script>
+        !function(e,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports):"function"==typeof define&&define.amd?define(["exports"],t):t((e="undefined"!=typeof globalThis?globalThis:e||self).supabase={})}(this,(function(e){"use strict";
+        e.createClient = function(url, key) {
+            const headers = { "apikey": key, "Authorization": "Bearer " + key, "Content-Type": "application/json" };
+            return {
+                auth: {
+                    signInWithPassword: async function(obj) {
+                        try {
+                            const r = await fetch(`${url}/auth/v1/token?grant_type=password`, { method: "POST", headers, body: JSON.stringify({ email: obj.email, password: obj.password }) });
+                            const res = await r.json();
+                            if(!r.ok) return { error: { message: res.error_description || res.msg || "Erreur d'authentification" } };
+                            localStorage.setItem("sb-session", JSON.stringify(res));
+                            return { data: res, error: null };
+                        } catch(err) { return { error: { message: "Réseau indisponible" } }; }
+                    },
+                    getSession: async function() {
+                        const s = localStorage.getItem("sb-session");
+                        return { data: { session: s ? JSON.parse(s) : null } };
+                    },
+                    signOut: async function() { localStorage.removeItem("sb-session"); return { error: null }; }
+                },
+                from: function(table) {
+                    return {
+                        select: function() {
+                            return {
+                                then: async function(callback) {
+                                    try {
+                                        const r = await fetch(`${url}/rest/v1/${table}?select=*`, { method: "GET", headers });
+                                        const res = await r.json();
+                                        callback({ data: r.ok ? res : [], error: r.ok ? null : res });
+                                    } catch(e) { callback({ data: [], error: e }); }
+                                }
+                            };
+                        },
+                        insert: function(rows) {
+                            return {
+                                then: async function(callback) {
+                                    try {
+                                        const r = await fetch(`${url}/rest/v1/${table}`, { method: "POST", headers: { ...headers, "Prefer": "return=minimal" }, body: JSON.stringify(rows) });
+                                        callback({ error: r.ok ? null : { message: "Erreur lors de l'enregistrement" } });
+                                    } catch(e) { callback({ error: e }); }
+                                }
+                            };
+                        }
+                    };
+                }
+            };
+        };
+        Object.defineProperty(e,"__esModule",{value:!0})}));
+    </script>
 </head>
-<body class="bg-gray-100 font-sans min-h-screen flex items-center justify-center p-4">
+<body>
 
-    <!-- 1. ÉCRAN DE CONNEXION OBLIGATOIRE (SÉCURITÉ PAR ÉCHELON) -->
-    <div id="section-connexion" class="w-full max-w-md bg-white p-8 rounded-xl shadow-xl border border-gray-100">
-        <div class="text-center mb-6">
-            <span class="text-4xl">专</span>
-            <h2 class="text-2xl font-bold text-gray-800 mt-2">Portail Église</h2>
-            <p class="text-gray-500 text-sm">Chaque échelon doit se connecter pour exécuter ses tâches</p>
+    <!-- 1. ÉCRAN DE CONNEXION SÉCURISÉ -->
+    <div id="section-connexion" class="bg-white" style="width: 100%; max-w: 400px;">
+        <div class="text-center">
+            <span style="font-size: 3rem;">⛪</span>
+            <h2 style="margin-top: 0.5rem; color: #1f2937;">Portail Église</h2>
+            <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1.5rem;">Authentification par échelon requise</p>
         </div>
-        <form id="form-connexion" class="space-y-4">
+        <form id="form-connexion" style="display: flex; flex-direction: column; gap: 1rem;">
             <div>
-                <label class="block text-sm font-medium text-gray-700">Adresse Email</label>
-                <input type="email" id="email" class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900" placeholder="comite@eglise.com" required>
+                <label style="font-size: 0.875rem; font-weight: 500; color: #374151;">Adresse Email</label>
+                <input type="email" id="email" class="input-text" style="margin-top: 0.25rem; padding: 0.75rem;" placeholder="comite@eglise.com" required>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700">Mot de passe</label>
-                <input type="password" id="password" class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900" placeholder="••••••••" required>
+                <label style="font-size: 0.875rem; font-weight: 500; color: #374151;">Mot de passe</label>
+                <input type="password" id="password" class="input-text" style="margin-top: 0.25rem; padding: 0.75rem;" placeholder="••••••••" required>
             </div>
-            <button type="submit" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded-lg transition shadow-md">
-                Se connecter au Tableau de Bord
-            </button>
+            <button type="submit" class="btn-valider" style="padding: 1rem;">Se connecter</button>
         </form>
     </div>
 
-    <!-- 2. INTERFACE PRINCIPALE (CACHÉE AVANT CONNEXION) -->
-    <div id="section-dashboard" class="w-full max-w-6xl mx-auto hidden">
-        
-        <!-- EN-TÊTE -->
-        <header class="mb-6 bg-white p-6 rounded-xl shadow-md flex flex-col md:flex-row justify-between items-center gap-4">
+    <!-- 2. INTERFACE PRINCIPALE (TOTALEMENT CACHÉE AVANT CONNEXION) -->
+    <div id="section-dashboard" class="max-w-6xl hidden">
+        <header class="header-app flex-row">
             <div>
-                <h1 class="text-2xl font-bold text-blue-900">⛪ Portail de Gestion Parfaite</h1>
-                <p class="text-gray-500 text-sm">Échelon d'accès actuel : <span id="user-role" class="font-bold text-blue-700">Vérification...</span></p>
+                <h1 style="margin: 0; color: #1e3a8a; font-size: 1.5rem;">⛪ Portail de Gestion Parfaite</h1>
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">Échelon : <span id="user-role" style="font-weight: bold; color: #2563eb;">Vérification...</span></p>
             </div>
-            <button onclick="deconnexion()" class="bg-red-50 text-red-600 hover:bg-red-100 text-sm font-medium px-4 py-2 rounded-lg transition">
-                Déconnexion 🚪
-            </button>
+            <button onclick="deconnexion()" style="background: #fee2e2; color: #dc2626; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer;">Déconnexion 🚪</button>
         </header>
 
-        <!-- FILTRE CALENDRIER & STATISTIQUES EN CDF -->
-        <div class="bg-white p-4 rounded-xl shadow-sm mb-6 flex flex-col lg:flex-row justify-between items-center gap-4">
-            <div class="flex flex-wrap items-center gap-2">
-                <span class="text-sm font-bold text-gray-700">📅 Structure Calendrier :</span>
-                <input type="date" id="date-debut" onchange="chargerDonneesTableaux()" class="p-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-900">
-                <span class="text-gray-400">au</span>
-                <input type="date" id="date-fin" onchange="chargerDonneesTableaux()" class="p-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-900">
+        <!-- CALENDRIER & TOTAL EN CDF -->
+        <div class="header-app flex-row" style="border-bottom: none; margin-bottom: 1.5rem; gap: 1rem; background: white;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                <span style="font-weight: bold; color: #374151;">📅 Filtrer la Période :</span>
+                <input type="date" id="date-debut" onchange="chargerDonneesTableaux()" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
+                <span>au</span>
+                <input type="date" id="date-fin" onchange="chargerDonneesTableaux()" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full lg:w-auto">
-                <div class="bg-green-50 p-3 rounded-xl border border-green-100 text-center"><p class="text-xs font-bold text-gray-400 uppercase">Total Recettes</p><p id="stat-entrees" class="text-lg font-black text-green-600">0 CDF</p></div>
-                <div class="bg-red-50 p-3 rounded-xl border border-red-100 text-center"><p class="text-xs font-bold text-gray-400 uppercase">Total Dépenses</p><p id="stat-depenses" class="text-lg font-black text-red-600">0 CDF</p></div>
-                <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 text-center"><p class="text-xs font-bold text-gray-400 uppercase">Solde Caisse</p><p id="stat-solde" class="text-lg font-black text-blue-900">0 CDF</p></div>
+            <div class="grid grid-3" style="width: 100%; max-width: 500px; gap: 0.5rem;">
+                <div class="card-stat" style="border-left-color: #10b981; background: #f0fdf4;"><p style="margin:0; font-size:0.75rem; color:#6b7280;">RECETTES</p><p id="stat-entrees" style="margin:5px 0 0 0; font-weight:900; color:#059669;">0 CDF</p></div>
+                <div class="card-stat" style="border-left-color: #ef4444; background: #fef2f2;"><p style="margin:0; font-size:0.75rem; color:#6b7280;">DÉPENSES</p><p id="stat-depenses" style="margin:5px 0 0 0; font-weight:900; color:#dc2626;">0 CDF</p></div>
+                <div class="card-stat" style="border-left-color: #3b82f6; background: #eff6ff;"><p style="margin:0; font-size:0.75rem; color:#6b7280;">SOLDE CAISSE</p><p id="stat-solde" style="margin:5px 0 0 0; font-weight:900; color:#1e3a8a;">0 CDF</p></div>
             </div>
         </div>
-        <!-- SYSTÈME D'ONGLETS POUR LES TABLEAUX -->
-        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
-            <div class="flex flex-wrap border-b bg-gray-50 text-xs md:text-sm font-semibold">
-                <button onclick="changerOnglet('tab-entrees')" id="btn-tab-entrees" class="onglet-btn flex-1 py-3 px-2 text-blue-900 border-b-2 border-blue-900 bg-white focus:outline-none">📥 Entrées</button>
-                <button onclick="changerOnglet('tab-sorties')" id="btn-tab-sorties" class="onglet-btn flex-1 py-3 px-2 text-gray-500 hover:text-blue-900 focus:outline-none">📤 Sorties</button>
-                <button onclick="changerOnglet('tab-membres')" id="btn-tab-membres" class="onglet-btn flex-1 py-3 px-2 text-gray-500 hover:text-blue-900 focus:outline-none">👥 Fidèles</button>
-                <button onclick="changerOnglet('tab-biens')" id="btn-tab-biens" class="onglet-btn flex-1 py-3 px-2 text-gray-500 hover:text-blue-900 focus:outline-none">📦 Biens</button>
-                <button onclick="changerOnglet('tab-documents')" id="btn-tab-documents" class="onglet-btn flex-1 py-3 px-2 text-gray-500 hover:text-blue-900 focus:outline-none">📜 Documents</button>
-                <button onclick="changerOnglet('tab-projets')" id="btn-tab-projets" class="onglet-btn flex-1 py-3 px-2 text-gray-500 hover:text-blue-900 focus:outline-none">🧱 Plan en Cours</button>
-                <button onclick="changerOnglet('tab-programmes')" id="btn-tab-programmes" class="onglet-btn flex-1 py-3 px-2 text-gray-500 hover:text-blue-900 focus:outline-none">🗓️ Programme</button>
+        <!-- ZONE TABLEAUX ET ONGLETS -->
+        <div style="background: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow: hidden;">
+            <div class="onglet-barre">
+                <button onclick="changerOnglet('tab-entrees')" id="btn-tab-entrees" class="onglet-btn actif">📥 Entrées</button>
+                <button onclick="changerOnglet('tab-sorties')" id="btn-tab-sorties" class="onglet-btn">📤 Sorties</button>
+                <button onclick="changerOnglet('tab-membres')" id="btn-tab-membres" class="onglet-btn">👥 Fidèles</button>
+                <button onclick="changerOnglet('tab-biens')" id="btn-tab-biens" class="onglet-btn">📦 Biens</button>
+                <button onclick="changerOnglet('tab-documents')" id="btn-tab-documents" class="onglet-btn">📜 Documents</button>
+                <button onclick="changerOnglet('tab-projets')" id="btn-tab-projets" class="onglet-btn">🧱 Plan en Cours</button>
+                <button onclick="changerOnglet('tab-programmes')" id="btn-tab-programmes" class="onglet-btn">🗓️ Programme</button>
             </div>
 
-            <div class="p-4 md:p-6">
+            <div style="padding: 1.5rem;">
                 <!-- 1. TABLEAU DES ENTRÉES -->
-                <div id="tab-entrees" class="onglet-content space-y-4">
-                    <form id="form-entree" class="zone-comite hidden bg-gray-50 p-4 rounded-xl grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                        <div><label class="block text-xs font-bold text-gray-600">Type</label><select id="type_entree" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required><option value="Dîme">Dîme</option><option value="Offrande Ordinaire">Offrande Ordinaire</option><option value="Offrande Développement">Offrande Développement</option></select></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Précision / Nom du fidèle</label><input type="text" id="motif_entree" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" placeholder="Ex: Culte du dimanche"></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Montant (CDF)</label><input type="number" id="montant_entree" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required></div>
-                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg text-sm">Enregistrer Entrée</button>
+                <div id="tab-entrees" class="onglet-content">
+                    <form id="form-entree" class="zone-comite hidden form-saisie" style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+                        <div style="flex:1; min-width:150px;"><label style="font-size:11px; font-weight:bold;">Type</label><select id="type_entree" class="input-text" style="margin-top:4px;"><option value="Dîme">Dîme</option><option value="Offrande Ordinaire">Offrande Ordinaire</option><option value="Offrande Développement">Offrande Développement</option></select></div>
+                        <div style="flex:2; min-width:200px;"><label style="font-size:11px; font-weight:bold;">Précision / Nom</label><input type="text" id="motif_entree" class="input-text" style="margin-top:4px;" placeholder="Nom ou événement"></div>
+                        <div style="flex:1; min-width:120px;"><label style="font-size:11px; font-weight:bold;">Montant (CDF)</label><input type="number" id="montant_entree" class="input-text" style="margin-top:4px;" required></div>
+                        <button type="submit" style="background:#10b981; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer;">Ajouter</button>
                     </form>
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase"><tr><th class="p-3">Date</th><th class="p-3">Type Recette</th><th class="p-3">Précision</th><th class="p-3">Montant Reçu</th></tr></thead><tbody id="table-entrees-body" class="text-sm divide-y"></tbody></table></div>
+                    <div style="overflow-x:auto;"><table><thead><tr><th>Date</th><th>Type Recette</th><th>Précision</th><th>Montant</th></tr></thead><tbody id="table-entrees-body"></tbody></table></div>
                 </div>
 
                 <!-- 2. TABLEAU DES SORTIES -->
-                <div id="tab-sorties" class="onglet-content hidden space-y-4">
-                    <form id="form-depense" class="zone-comite hidden bg-gray-50 p-4 rounded-xl grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                        <div><label class="block text-xs font-bold text-gray-600">Catégorie</label><select id="categorie_depense" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required><option value="Matériaux">Matériaux & Construction</option><option value="Fonctionnement">Fonctionnement</option><option value="Social">Social</option></select></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Motif précis du décaissement</label><input type="text" id="motif_depense" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" placeholder="Ex: Achat 20 sacs de ciment" required></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Montant (CDF)</label><input type="number" id="montant_depense" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required></div>
-                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg text-sm">Enregistrer Sortie</button>
+                <div id="tab-sorties" class="onglet-content hidden">
+                    <form id="form-depense" class="zone-comite hidden form-saisie" style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+                        <div style="flex:1; min-width:150px;"><label style="font-size:11px; font-weight:bold;">Catégorie</label><select id="categorie_depense" class="input-text" style="margin-top:4px;"><option value="Matériaux">Matériaux & Construction</option><option value="Fonctionnement">Fonctionnement</option><option value="Social">Social</option></select></div>
+                        <div style="flex:2; min-width:200px;"><label style="font-size:11px; font-weight:bold;">Motif précis</label><input type="text" id="motif_depense" class="input-text" style="margin-top:4px;" placeholder="Ex: Achat 20 sacs ciment" required></div>
+                        <div style="flex:1; min-width:120px;"><label style="font-size:11px; font-weight:bold;">Montant (CDF)</label><input type="number" id="montant_depense" class="input-text" style="margin-top:4px;" required></div>
+                        <button type="submit" style="background:#ef4444; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer;">Enregistrer Sortie</button>
                     </form>
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase"><tr><th class="p-3">Date</th><th class="p-3">Catégorie</th><th class="p-3">Motif de la Dépense</th><th class="p-3">Montant Sorti</th></tr></thead><tbody id="table-sorties-body" class="text-sm divide-y"></tbody></table></div>
+                    <div style="overflow-x:auto;"><table><thead><tr><th>Date</th><th>Catégorie</th><th>Motif de la Dépense</th><th>Montant Sorti</th></tr></thead><tbody id="table-sorties-body"></tbody></table></div>
                 </div>
+
                 <!-- 3. TABLEAU DES MEMBRES -->
-                <div id="tab-membres" class="onglet-content hidden space-y-4">
-                    <form id="form-membre" class="zone-comite hidden bg-gray-50 p-4 rounded-xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-2 items-end">
-                        <div><label class="block text-xs font-bold text-gray-600">Nom & Post-nom</label><input type="text" id="nom_membre" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Baptisé ?</label><select id="baptise" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm"><option value="Baptisé">Baptisé</option><option value="Non baptisé">Non baptisé</option></select></div>
-                        <div><label class="block text-xs font-bold text-gray-600">État Civil</label><input type="text" id="etat_civil" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" placeholder="Ex: Marié"></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Adresse</label><input type="text" id="adresse" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm"></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Contact</label><input type="text" id="contact" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm"></div>
-                        <button type="submit" class="bg-blue-900 text-white font-bold py-2 rounded-lg text-sm">Inscrire</button>
+                <div id="tab-membres" class="onglet-content hidden">
+                    <form id="form-membre" class="zone-comite hidden form-saisie" style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end;">
+                        <input type="text" id="nom_membre" class="input-text" style="flex:2; min-width:150px;" placeholder="Nom & Post-nom" required>
+                        <select id="baptise" class="input-text" style="flex:1; min-width:100px;"><option value="Baptisé">Baptisé</option><option value="Non baptisé">Non baptisé</option></select>
+                        <input type="text" id="etat_civil" class="input-text" style="flex:1; min-width:100px;" placeholder="État Civil (Ex: Marié)">
+                        <input type="text" id="adresse" class="input-text" style="flex:2; min-width:130px;" placeholder="Adresse physique">
+                        <input type="text" id="contact" class="input-text" style="flex:1; min-width:110px;" placeholder="Contact Téléphone">
+                        <button type="submit" style="background:#1e3a8a; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">Inscrire</button>
                     </form>
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase"><tr><th class="p-3">N°</th><th class="p-3">Nom & Post-nom</th><th class="p-3">État Spirituel</th><th class="p-3">État Civil</th><th class="p-3">Adresse</th><th class="p-3">Contact</th></tr></thead><tbody id="table-membres-body" class="text-sm divide-y"></tbody></table></div>
+                    <div style="overflow-x:auto;"><table><thead><tr><th>N°</th><th>Nom & Post-nom</th><th>État Spirituel</th><th>État Civil</th><th>Adresse</th><th>Contact</th></tr></thead><tbody id="table-membres-body"></tbody></table></div>
                 </div>
 
                 <!-- 4. TABLEAU DES BIENS -->
-                <div id="tab-biens" class="onglet-content hidden space-y-4">
-                    <form id="form-bien" class="zone-comite hidden bg-gray-50 p-4 rounded-xl grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                        <div><label class="block text-xs font-bold text-gray-600">Désignation du bien</label><input type="text" id="desig_bien" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Quantité</label><input type="number" id="qte_bien" value="1" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required></div>
-                        <div><label class="block text-xs font-bold text-gray-600">État général</label><select id="etat_bien" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm"><option value="Neuf">Neuf</option><option value="Bon état">Bon état</option><option value="À réparer">À réparer</option></select></div>
-                        <button type="submit" class="bg-amber-600 text-white font-bold py-2 rounded-lg text-sm">Enregistrer l'article</button>
+                <div id="tab-biens" class="onglet-content hidden">
+                    <form id="form-bien" class="zone-comite hidden form-saisie" style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+                        <input type="text" id="desig_bien" class="input-text" style="flex:2; min-width:150px;" placeholder="Désignation du bien physique" required>
+                        <input type="number" id="qte_bien" class="input-text" style="flex:1; min-width:80px;" value="1" placeholder="Quantité" required>
+                        <select id="etat_bien" class="input-text" style="flex:1; min-width:120px;"><option value="Neuf">Neuf</option><option value="Bon état">Bon état</option><option value="À réparer">À réparer</option></select>
+                        <button type="submit" style="background:#d97706; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer;">Enregistrer</button>
                     </form>
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase"><tr><th class="p-3">N°</th><th class="p-3">Désignation de l'Équipement</th><th class="p-3">Quantité</th><th class="p-3">État</th></tr></thead><tbody id="table-biens-body" class="text-sm divide-y"></tbody></table></div>
+                    <div style="overflow-x:auto;"><table><thead><tr><th>N°</th><th>Désignation de l'Équipement</th><th>Quantité</th><th>État</th></tr></thead><tbody id="table-biens-body"></tbody></table></div>
+                </div>
+                <!-- 5. TABLEAU DES DOCUMENTS -->
+                <div id="tab-documents" class="onglet-content hidden">
+                    <form id="form-doc" class="zone-comite hidden form-saisie" style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+                        <input type="text" id="titre_doc" class="input-text" style="flex:2; min-width:150px;" placeholder="Titre du document sacré" required>
+                        <input type="text" id="cat_doc" class="input-text" style="flex:1; min-width:120px;" placeholder="Catégorie (Ex: Baptêmes)">
+                        <input type="text" id="lieu_doc" class="input-text" style="flex:2; min-width:150px;" placeholder="Emplacement physique d'archivage" required>
+                        <button type="submit" style="background:#6b21a8; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer;">Consigner</button>
+                    </form>
+                    <div style="overflow-x:auto;"><table><thead><tr><th>N°</th><th>Titre du Document</th><th>Catégorie</th><th>Emplacement Physique</th></tr></thead><tbody id="table-documents-body"></tbody></table></div>
                 </div>
 
-                <!-- 5. TABLEAU DES DOCUMENTS SACRÉS -->
-                <div id="tab-documents" class="onglet-content hidden space-y-4">
-                    <form id="form-doc" class="zone-comite hidden bg-gray-50 p-4 rounded-xl grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                        <div><label class="block text-xs font-bold text-gray-600">Titre du document sacré</label><input type="text" id="titre_doc" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Catégorie</label><input type="text" id="cat_doc" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" placeholder="Ex: Actes juridiques, Registre Baptêmes"></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Lieu d'archivage physique</label><input type="text" id="lieu_doc" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" placeholder="Ex: Armoire Archives A, Bureau Pasteur" required></div>
-                        <button type="submit" class="bg-purple-700 text-white font-bold py-2 rounded-lg text-sm">Consigner le Doc</button>
+                <!-- 6. TABLEAU PLAN EN COURS -->
+                <div id="tab-projets" class="onglet-content hidden">
+                    <form id="form-projet" class="zone-comite hidden form-saisie" style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+                        <input type="text" id="nom_projet" class="input-text" style="flex:2; min-width:150px;" placeholder="Désignation du projet" required>
+                        <input type="number" id="budget_estime" class="input-text" style="flex:1; min-width:100px;" placeholder="Budget Prévu (CDF)" required>
+                        <input type="text" id="responsable_projet" class="input-text" style="flex:1; min-width:120px;" placeholder="Nom du responsable">
+                        <select id="statut_projet" class="input-text" style="flex:1; min-width:100px;"><option value="Planifié">Planifié</option><option value="En cours">En cours</option><option value="Suspendu">Suspendu</option><option value="Terminé">Terminé</option></select>
+                        <button type="submit" style="background:#4f46e5; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer;">Lancer</button>
                     </form>
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase"><tr><th class="p-3">N°</th><th class="p-3">Titre du Document Sacré</th><th class="p-3">Catégorie</th><th class="p-3">Emplacement Physique</th></tr></thead><tbody id="table-documents-body" class="text-sm divide-y"></tbody></table></div>
-                </div>
-                <!-- 6. TABLEAU DU PLAN EN COURS (PROJETS) -->
-                <div id="tab-projets" class="onglet-content hidden space-y-4">
-                    <form id="form-projet" class="zone-comite hidden bg-gray-50 p-4 rounded-xl grid grid-cols-1 md:grid-cols-5 gap-2 items-end">
-                        <div><label class="block text-xs font-bold text-gray-600">Désignation du projet</label><input type="text" id="nom_projet" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Budget Prévu (CDF)</label><input type="number" id="budget_estime" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Responsable</label><input type="text" id="responsable_projet" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" placeholder="Nom du responsable"></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Statut</label><select id="statut_projet" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm"><option value="Planifié">Planifié</option><option value="En cours">En cours</option><option value="Suspendu">Suspendu</option><option value="Terminé">Terminé</option></select></div>
-                        <button type="submit" class="bg-indigo-600 text-white font-bold py-2 rounded-lg text-sm">Lancer</button>
-                    </form>
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase"><tr><th class="p-3">N°</th><th class="p-3">Libellé du Projet</th><th class="p-3">Budget Estimé</th><th class="p-3">Responsable du Chantier</th><th class="p-3">Statut actuel</th></tr></thead><tbody id="table-projets-body" class="text-sm divide-y"></tbody></table></div>
+                    <div style="overflow-x:auto;"><table><thead><tr><th>N°</th><th>Libellé du Projet</th><th>Budget Estimé</th><th>Responsable</th><th>Statut</th></tr></thead><tbody id="table-projets-body"></tbody></table></div>
                 </div>
 
-                <!-- 7. TABLEAU DU PROGRAMME DES CULTES -->
-                <div id="tab-programmes" class="onglet-content hidden space-y-4">
-                    <form id="form-programme" class="zone-comite hidden bg-gray-50 p-4 rounded-xl grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 items-end">
-                        <div class="col-span-2 lg:col-span-1"><label class="block text-xs font-bold text-gray-600">Thème du Jour</label><input type="text" id="theme_culte" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Prédicateur</label><input type="text" id="predi_culte" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm"></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Modérateur</label><input type="text" id="mode_culte" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm"></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Hommes</label><input type="number" id="nb_h" value="0" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Femmes</label><input type="number" id="nb_f" value="0" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required></div>
-                        <div><label class="block text-xs font-bold text-gray-600">Enfants</label><input type="number" id="nb_e" value="0" class="w-full mt-1 p-2 bg-white border rounded-lg text-sm" required></div>
-                        <button type="submit" class="bg-teal-600 text-white font-bold py-2 rounded-lg text-sm w-full">Clôturer</button>
+                <!-- 7. TABLEAU DU PROGRAMME -->
+                <div id="tab-programmes" class="onglet-content hidden">
+                    <form id="form-programme" class="zone-comite hidden form-saisie" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap:8px;">
+                        <input type="text" id="theme_culte" class="input-text" placeholder="Thème du Jour" required>
+                        <input type="text" id="predi_culte" class="input-text" placeholder="Prédicateur">
+                        <input type="text" id="mode_culte" class="input-text" placeholder="Modérateur">
+                        <input type="number" id="nb_h" class="input-text" value="0" placeholder="Hommes" required>
+                        <input type="number" id="nb_f" class="input-text" value="0" placeholder="Femmes" required>
+                        <input type="number" id="nb_e" class="input-text" value="0" placeholder="Enfants" required>
+                        <button type="submit" style="background:#0d9488; color:white; border:none; padding:8px; border-radius:5px; font-weight:bold; cursor:pointer;">Clôturer</button>
                     </form>
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase"><tr><th class="p-3">Date</th><th class="p-3">Thème Général & Déroulement</th><th class="p-3">Prédicateur</th><th class="p-3">Modérateur</th><th class="p-3 text-center">H / F / E</th><th class="p-3 text-center font-black">Présence Totale</th></tr></thead><tbody id="table-programmes-body" class="text-sm divide-y"></tbody></table></div>
+                    <div style="overflow-x:auto;"><table><thead><tr><th>Date</th><th>Thème Général & Déroulement</th><th>Prédicateur</th><th>Modérateur</th><th>H / F / E</th><th>Présence Totale</th></tr></thead><tbody id="table-programmes-body"></tbody></table></div>
                 </div>
             </div>
         </div>
     </div>
     <script>
-        // CONFIGURATION CLOUD SUPABASE (À remplacer par vos clés)
-        const SUPABASE_URL = "xgibabbmmhflhjocvykr";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnaWJhYmJtbWhmbGhqb2N2eWtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MTk3OTgsImV4cCI6MjEwMjM5NTc5OH0.WuXLVe7slbu3eS96SEbFLzh4nYmuiYr8pGuRlI8K8rc";
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        let utilisateurCourant = null;
-
-        document.addEventListener('DOMContentLoaded', verifierSession);
+        // CONFIGURATION SECURISEE DIRECTE SUPABASE
+        const SUPABASE_URL = "VOTRE_SUPABASE_URL"; 
+        const SUPABASE_ANON_KEY = "VOTRE_SUPABASE_ANON_KEY"; 
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // FORMULAIRE DE CONNEXION (SÉCURITÉ CHANGER PAR ÉCHELON)
         document.getElementById('form-connexion').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
                 email: document.getElementById('email').value,
                 password: document.getElementById('password').value
             });
@@ -184,198 +243,100 @@
 
         // VÉRIFICATION AUTOMATIQUE DE LA SESSION SÉCURISÉE
         async function verifierSession() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
-                utilisateurCourant = session.user;
                 document.getElementById('section-connexion').classList.add('hidden');
                 document.getElementById('section-dashboard').classList.remove('hidden');
-                document.body.className = "bg-gray-100 font-sans p-4 md:p-6";
+                document.body.style.display = "block";
                 
-                gererEchelonsEtDroits(session.user);
+                let role = "Serviteur (Lecture Seule 🔎)";
+                let estComite = false;
+                
+                // Définition de l'échelon par mot-clé dans l'adresse e-mail
+                if (session.user.email.includes('president') || session.user.email.includes('comite') || session.user.email.includes('admin') || session.user.email.includes('tresorier')) {
+                    role = "Comité de Développement (Accès Total ⚡)";
+                    estComite = true;
+                }
+                document.getElementById('user-role').innerText = role;
+                
+                // Afficher ou masquer les formulaires de modification selon l'échelon
+                document.querySelectorAll('.zone-comite').forEach(f => {
+                    if (estComite) f.classList.remove('hidden');
+                    else f.classList.add('hidden');
+                });
+                
                 chargerDonneesTableaux();
             } else {
-                utilisateurCourant = null;
                 document.getElementById('section-connexion').classList.remove('hidden');
                 document.getElementById('section-dashboard').classList.add('hidden');
-                document.body.className = "bg-gray-100 font-sans min-h-screen flex items-center justify-center p-4";
+                document.body.style.display = "flex";
             }
-        }
-
-        // GESTION DES ÉCHELONS D'ACCÈS
-        function gererEchelonsEtDroits(user) {
-            let role = "Serviteur (Lecture Seule 🔎)";
-            let estComite = false;
-
-            // Définition de l'échelon par mot-clé dans l'adresse e-mail
-            if (user.email.includes('president') || user.email.includes('comite') || user.email.includes('admin') || user.email.includes('tresorier')) {
-                role = "Comité de Développement (Accès Total ⚡)";
-                estComite = true;
-            }
-
-            document.getElementById('user-role').innerText = role;
-
-            // Afficher ou masquer les formulaires de modification selon l'échelon
-            document.querySelectorAll('.zone-comite').forEach(form => {
-                if (estComite) form.classList.remove('hidden');
-                else form.classList.add('hidden');
-            });
         }
 
         // NAVIGATION ENTRE LES ENGINS (ONGLETS)
         function changerOnglet(tabId) {
             document.querySelectorAll('.onglet-content').forEach(el => el.classList.add('hidden'));
             document.getElementById(tabId).classList.remove('hidden');
-
-            document.querySelectorAll('.onglet-btn').forEach(btn => {
-                btn.classList.remove('text-blue-900', 'border-b-2', 'border-blue-900', 'bg-white');
-                btn.classList.add('text-gray-500');
-            });
-
-            const activeBtn = document.getElementById('btn-' + tabId);
-            activeBtn.classList.add('text-blue-900', 'border-b-2', 'border-blue-900', 'bg-white');
+            document.querySelectorAll('.onglet-btn').forEach(btn => btn.classList.remove('actif'));
+            document.getElementById('btn-' + tabId).classList.add('actif');
         }
         // ENREGISTREMENTS DES DONNÉES (SOUMISSION DES FORMULAIRES COMITÉ)
-        document.getElementById('form-entree').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const type_entree = document.getElementById('type_entree').value;
-            const motif_special = document.getElementById('motif_entree').value;
-            const montant = document.getElementById('montant_entree').value;
-            const { error } = await supabase.from('transactions').insert([{ type_entree, motif_special, montant }]);
-            if (error) alert(error.message); else { document.getElementById('form-entree').reset(); chargerDonneesTableaux(); }
-        });
+        document.getElementById('form-entree').addEventListener('submit', function(e){ e.preventDefault(); supabaseClient.from('transactions').insert([{ type_entree: document.getElementById('type_entree').value, motif_special: document.getElementById('motif_entree').value, montant: document.getElementById('montant_entree').value }]).then(() => { document.getElementById('form-entree').reset(); chargerDonneesTableaux(); }); });
+        document.getElementById('form-depense').addEventListener('submit', function(e){ e.preventDefault(); supabaseClient.from('depenses').insert([{ categorie: document.getElementById('categorie_depense').value, motif: document.getElementById('motif_depense').value, montant: document.getElementById('montant_depense').value }]).then(() => { document.getElementById('form-depense').reset(); chargerDonneesTableaux(); }); });
+        document.getElementById('form-membre').addEventListener('submit', function(e){ e.preventDefault(); supabaseClient.from('membres').insert([{ nom_postnom: document.getElementById('nom_membre').value, baptise: document.getElementById('baptise').value, etat_civil: document.getElementById('etat_civil').value, adresse: document.getElementById('adresse').value, contact: document.getElementById('contact').value }]).then(() => { document.getElementById('form-membre').reset(); chargerDonneesTableaux(); }); });
+        document.getElementById('form-bien').addEventListener('submit', function(e){ e.preventDefault(); supabaseClient.from('biens').insert([{ designation: document.getElementById('desig_bien').value, quantite: document.getElementById('qte_bien').value, etat: document.getElementById('etat_bien').value }]).then(() => { document.getElementById('form-bien').reset(); chargerDonneesTableaux(); }); });
+        document.getElementById('form-doc').addEventListener('submit', function(e){ e.preventDefault(); supabaseClient.from('documents_sacres').insert([{ titre_document: document.getElementById('titre_doc').value, categorie: document.getElementById('cat_doc').value, lieu_conservation: document.getElementById('lieu_doc').value }]).then(() => { document.getElementById('form-doc').reset(); chargerDonneesTableaux(); }); });
+        document.getElementById('form-projet').addEventListener('submit', function(e){ e.preventDefault(); supabaseClient.from('projets').insert([{ nom_projet: document.getElementById('nom_projet').value, budget_estime_cdf: document.getElementById('budget_estime').value, responsable: document.getElementById('responsable_projet').value, statut: document.getElementById('statut_projet').value }]).then(() => { document.getElementById('form-projet').reset(); chargerDonneesTableaux(); }); });
+        document.getElementById('form-programme').addEventListener('submit', function(e){ e.preventDefault(); supabaseClient.from('programmes_cultes').insert([{ theme: document.getElementById('theme_culte').value, predicateur: document.getElementById('predi_culte').value, moderateur: document.getElementById('mode_culte').value, nb_hommes: document.getElementById('nb_h').value, nb_femmes: document.getElementById('nb_f').value, nb_enfants: document.getElementById('nb_e').value }]).then(() => { document.getElementById('form-programme').reset(); chargerDonneesTableaux(); }); });
 
-        document.getElementById('form-depense').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const categorie = document.getElementById('categorie_depense').value;
-            const motif = document.getElementById('motif_depense').value;
-            const montant = document.getElementById('montant_depense').value;
-            const { error } = await supabase.from('depenses').insert([{ categorie, motif, montant }]);
-            if (error) alert(error.message); else { document.getElementById('form-depense').reset(); chargerDonneesTableaux(); }
-        });
+        // REQUÊTES SYNCHRONES ET MISE À JOUR EN TEMPS RÉEL DES TABLEAUX EN CDF
+        function chargerDonneesTableaux() {
+            supabaseClient.from('transactions').select().then(r1 => {
+                supabaseClient.from('depenses').select().then(r2 => {
+                    supabaseClient.from('membres').select().then(r3 => {
+                        supabaseClient.from('biens').select().then(r4 => {
+                            supabaseClient.from('documents_sacres').select().then(r5 => {
+                                supabaseClient.from('projets').select().then(r6 => {
+                                    supabaseClient.from('programmes_cultes').select().then(r7 => {
+                                        let tE = 0, tD = 0;
+                                        
+                                        // Remplissage Entrées
+                                        document.getElementById('table-entrees-body').innerHTML = r1.data.map(e => { tE += Number(e.montant); return `<tr><td>${e.date_transaction}</td><td style="color:green;font-weight:bold;">${e.type_entree}</td><td>${e.motif_special||'-'}</td><td style="color:green;font-weight:bold;">+ ${Number(e.montant).toLocaleString()} CDF</td></tr>`; }).join('') || '<tr><td colspan="4">Aucune donnée</td></tr>';
+                                        
+                                        // Remplissage Sorties
+                                        document.getElementById('table-sorties-body').innerHTML = r2.data.map(d => { tD += Number(d.montant); return `<tr><td>${d.date_depense}</td><td style="color:red;font-weight:bold;">${d.categorie}</td><td>${d.motif}</td><td style="color:red;font-weight:bold;">- ${Number(d.montant).toLocaleString()} CDF</td></tr>`; }).join('') || '<tr><td colspan="4">Aucune donnée</td></tr>';
+                                        
+                                        // Indicateurs globaux (Haut de page)
+                                        document.getElementById('stat-entrees').innerText = tE.toLocaleString() + " CDF";
+                                        document.getElementById('stat-depenses').innerText = tD.toLocaleString() + " CDF";
+                                        document.getElementById('stat-solde').innerText = (tE - tD).toLocaleString() + " CDF";
 
-        document.getElementById('form-membre').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const nom_postnom = document.getElementById('nom_membre').value;
-            const baptise = document.getElementById('baptise').value;
-            const etat_civil = document.getElementById('etat_civil').value;
-            const adresse = document.getElementById('adresse').value;
-            const contact = document.getElementById('contact').value;
-            const { error } = await supabase.from('membres').insert([{ nom_postnom, baptise, etat_civil, adresse, contact }]);
-            if (error) alert(error.message); else { document.getElementById('form-membre').reset(); chargerDonneesTableaux(); }
-        });
-
-        document.getElementById('form-bien').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const designation = document.getElementById('desig_bien').value;
-            const quantite = document.getElementById('qte_bien').value;
-            const etat = document.getElementById('etat_bien').value;
-            const { error } = await supabase.from('biens').insert([{ designation, quantite, etat }]);
-            if (error) alert(error.message); else { document.getElementById('form-bien').reset(); chargerDonneesTableaux(); }
-        });
-
-        document.getElementById('form-doc').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const titre_document = document.getElementById('titre_doc').value;
-            const categorie = document.getElementById('cat_doc').value;
-            const lieu_conservation = document.getElementById('lieu_doc').value;
-            const { error } = await supabase.from('documents_sacres').insert([{ titre_document, categorie, lieu_conservation }]);
-            if (error) alert(error.message); else { document.getElementById('form-doc').reset(); chargerDonneesTableaux(); }
-        });
-
-        document.getElementById('form-projet').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const nom_projet = document.getElementById('nom_projet').value;
-            const budget_estime_cdf = document.getElementById('budget_estime').value;
-            const responsable = document.getElementById('responsable_projet').value;
-            const statut = document.getElementById('statut_projet').value;
-            const { error } = await supabase.from('projets').insert([{ nom_projet, budget_estime_cdf, responsable, statut }]);
-            if (error) alert(error.message); else { document.getElementById('form-projet').reset(); chargerDonneesTableaux(); }
-        });
-
-        document.getElementById('form-programme').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const theme = document.getElementById('theme_culte').value;
-            const predicateur = document.getElementById('predi_culte').value;
-            const moderateur = document.getElementById('mode_culte').value;
-            const nb_hommes = document.getElementById('nb_h').value;
-            const nb_femmes = document.getElementById('nb_f').value;
-            const nb_enfants = document.getElementById('nb_e').value;
-            const { error } = await supabase.from('programmes_cultes').insert([{ theme, predicateur, moderateur, nb_hommes, nb_femmes, nb_enfants }]);
-            if (error) alert(error.message); else { document.getElementById('form-programme').reset(); chargerDonneesTableaux(); }
-        });
-        // REQUÊTES ET MISE À JOUR DES 7 TABLEAUX ET INDICATEURS EN CDF
-        async function chargerDonneesTableaux() {
-            const dateDebut = document.getElementById('date-debut').value;
-            const dateFin = document.getElementById('date-fin').value;
-
-            let reqEntrees = supabase.from('transactions').select('*');
-            let reqDepenses = supabase.from('depenses').select('*');
-
-            if (dateDebut) { reqEntrees = reqEntrees.gte('date_transaction', dateDebut); reqDepenses = reqDepenses.gte('date_depense', dateDebut); }
-            if (dateFin) { reqEntrees = reqEntrees.lte('date_transaction', dateFin); reqDepenses = reqDepenses.lte('date_depense', dateFin); }
-
-            const { data: entrees } = await reqEntrees;
-            const { data: depenses } = await reqDepenses;
-            const { data: membres } = await supabase.from('membres').select('*').order('nom_postnom');
-            const { data: biens } = await supabase.from('biens').select('*').order('designation');
-            const { data: docs } = await supabase.from('documents_sacres').select('*').order('titre_document');
-            const { data: projets } = await supabase.from('projets').select('*').order('date_creation', { ascending: false });
-            const { data: programmes } = await supabase.from('programmes_cultes').select('*').order('date_culte', { ascending: false });
-
-            let totalEntrees = 0, totalDepenses = 0;
-
-            // Remplir Entrées
-            document.getElementById('table-entrees-body').innerHTML = entrees && entrees.length ? entrees.map(e => {
-                totalEntrees += Number(e.montant);
-                return `<tr class="hover:bg-gray-50"><td class="p-3 text-gray-500">${e.date_transaction}</td><td class="p-3 font-semibold text-green-600">${e.type_entree}</td><td class="p-3 text-gray-600">${e.motif_special || '-'}</td><td class="p-3 font-bold text-green-600">+ ${Number(e.montant).toLocaleString()} CDF</td></tr>`;
-            }).join('') : '<tr><td colspan="4" class="p-4 text-center text-gray-400">Aucune entrée.</td></tr>';
-
-            // Remplir Sorties
-            document.getElementById('table-sorties-body').innerHTML = depenses && depenses.length ? depenses.map(d => {
-                totalDepenses += Number(d.montant);
-                return `<tr class="hover:bg-gray-50"><td class="p-3 text-gray-500">${d.date_depense}</td><td class="p-3 font-semibold text-red-600">${d.categorie}</td><td class="p-3 text-gray-600">${d.motif}</td><td class="p-3 font-bold text-red-600">- ${Number(d.montant).toLocaleString()} CDF</td></tr>`;
-            }).join('') : '<tr><td colspan="4" class="p-4 text-center text-gray-400">Aucune dépense.</td></tr>';
-
-            // Mettre à jour les compteurs financiers du Calendrier
-            document.getElementById('stat-entrees').innerText = totalEntrees.toLocaleString() + " CDF";
-            document.getElementById('stat-depenses').innerText = totalDepenses.toLocaleString() + " CDF";
-            document.getElementById('stat-solde').innerText = (totalEntrees - totalDepenses).toLocaleString() + " CDF";
-
-            // Remplir Membres
-            let idxM = 1;
-            document.getElementById('table-membres-body').innerHTML = membres && membres.length ? membres.map(m => `
-                <tr class="hover:bg-gray-50"><td class="p-3 text-gray-400 font-bold">${idxM++}</td><td class="p-3 font-medium text-gray-800">${m.nom_postnom}</td><td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-bold ${m.baptise === 'Baptisé' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">${m.baptise}</span></td><td class="p-3 text-gray-600">${m.etat_civil || '-'}</td><td class="p-3 text-gray-600">${m.adresse || '-'}</td><td class="p-3 font-semibold text-blue-900">${m.contact || '-'}</td></tr>
-            `).join('') : '<tr><td colspan="6" class="p-4 text-center text-gray-400">Aucun fidèle.</td></tr>';
-
-            // Remplir Biens
-            let idxB = 1;
-            document.getElementById('table-biens-body').innerHTML = biens && biens.length ? biens.map(b => `
-                <tr class="hover:bg-gray-50"><td class="p-3 text-gray-400 font-bold">${idxB++}</td><td class="p-3 font-medium text-gray-800">${b.designation}</td><td class="p-3 font-bold text-gray-600">${b.quantite}</td><td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800">${b.etat}</span></td></tr>
-            `).join('') : '<tr><td colspan="4" class="p-4 text-center text-gray-400">Aucun bien répertorié.</td></tr>';
-
-            // Remplir Documents
-            let idxD = 1;
-            document.getElementById('table-documents-body').innerHTML = docs && docs.length ? docs.map(d => `
-                <tr class="hover:bg-gray-50"><td class="p-3 text-gray-400 font-bold">${idxD++}</td><td class="p-3 font-medium text-purple-950">${d.titre_document}</td><td class="p-3 text-gray-500 font-medium">${d.categorie || '-'}</td><td class="p-3 text-gray-600 italic font-semibold">📍 ${d.lieu_conservation}</td></tr>
-            `).join('') : '<tr><td colspan="4" class="p-4 text-center text-gray-400">Aucun document consigné.</td></tr>';
-
-            // Remplir Plan en Cours (Projets)
-            let idxP = 1;
-            document.getElementById('table-projets-body').innerHTML = projets && projets.length ? projets.map(p => `
-                <tr class="hover:bg-gray-50"><td class="p-3 text-gray-400 font-bold">${idxP++}</td><td class="p-3 font-medium text-gray-800">${p.nom_projet}</td><td class="p-3 font-semibold text-gray-700">${Number(p.budget_estime_cdf).toLocaleString()} CDF</td><td class="p-3 text-gray-600 font-medium">${p.responsable || '-'}</td><td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-bold bg-indigo-100 text-indigo-800">${p.statut}</span></td></tr>
-            `).join('') : '<tr><td colspan="5" class="p-4 text-center text-gray-400">Aucun projet enregistré.</td></tr>';
-
-            // Remplir Programme des Cultes avec présence totale calculée
-            document.getElementById('table-programmes-body').innerHTML = programmes && programmes.length ? programmes.map(pr => {
-                const totalCulte = Number(pr.nb_hommes) + Number(pr.nb_femmes) + Number(pr.nb_enfants);
-                return `<tr class="hover:bg-gray-50"><td class="p-3 text-gray-500">${pr.date_culte}</td><td class="p-3 font-bold text-gray-800">📖 Thème : ${pr.theme}</td><td class="p-3 text-gray-600 font-medium">${pr.predicateur || '-'}</td><td class="p-3 text-gray-600">${pr.moderateur || '-'}</td><td class="p-3 text-center text-xs text-gray-500 font-semibold">👨${pr.nb_hommes} | 👩${pr.nb_femmes} | 👧${pr.nb_enfants}</td><td class="p-3 text-center font-black text-teal-700 bg-teal-50">${totalCulte.toLocaleString()} Fidèles</td></tr>`;
-            }).join('') : '<tr><td colspan="6" class="p-4 text-center text-gray-400">Aucune activité enregistrée.</td></tr>';
+                                        // Remplissage Fidèles
+                                        let iM=1; document.getElementById('table-membres-body').innerHTML = r3.data.map(m => `<tr><td>${iM++}</td><td>${m.nom_postnom}</td><td>${m.baptise}</td><td>${m.etat_civil||'-'}</td><td>${m.adresse||'-'}</td><td>${m.contact||'-'}</td></tr>`).join('') || '<tr><td colspan="6">Aucun fidèle enregistré</td></tr>';
+                                        
+                                        // Remplissage Patrimoine (Biens)
+                                        let iB=1; document.getElementById('table-biens-body').innerHTML = r4.data.map(b => `<tr><td>${iB++}</td><td>${b.designation}</td><td>${b.quantite}</td><td>${b.etat}</td></tr>`).join('') || '<tr><td colspan="4">Aucun matériel répertorié</td></tr>';
+                                        
+                                        // Remplissage Documents
+                                        let iD=1; document.getElementById('table-documents-body').innerHTML = r5.data.map(d => `<tr><td>${iD++}</td><td>${d.titre_document}</td><td>${d.categorie||'-'}</td><td>📍 ${d.lieu_conservation}</td></tr>`).join('') || '<tr><td colspan="4">Aucun document consigné</td></tr>';
+                                        
+                                        // Remplissage Plan en Cours (Projets)
+                                        let iP=1; document.getElementById('table-projets-body').innerHTML = r6.data.map(p => `<tr><td>${iP++}</td><td>${p.nom_projet}</td><td>${Number(p.budget_estime_cdf).toLocaleString()} CDF</td><td>${p.responsable||'-'}</td><td>${p.statut}</td></tr>`).join('') || '<tr><td colspan="5">Aucun projet enregistré</td></tr>';
+                                        
+                                        // Remplissage Programme des cultes (Calcul Fréquentation Globale)
+                                        document.getElementById('table-programmes-body').innerHTML = r7.data.map(pr => `<tr><td>${pr.date_culte}</td><td><b>Thème : ${pr.theme}</b></td><td>${pr.predicateur||'-'}</td><td>${pr.moderateur||'-'}</td><td>👨${pr.nb_hommes} | 👩${pr.nb_femmes} | 👧${pr.nb_enfants}</td><td style="font-weight:bold;color:teal;">${(Number(pr.nb_hommes)+Number(pr.nb_femmes)+Number(pr.nb_enfants)).toLocaleString()} Fidèles</td></tr>`).join('') || '<tr><td colspan="6">Aucune activité enregistrée</td></tr>';
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
         }
 
-        async function deconnexion() {
-            await supabase.signOut();
-            verifierSession();
-        }
+        function deconnexion() { supabaseClient.auth.signOut().then(() => verifierSession()); }
+        verifierSession();
     </script>
 </body>
 </html>
+
