@@ -414,21 +414,7 @@
                                         let tE = 0, tD = 0;
                                         let recFonc = 0, recDev = 0;
                                         let depFonc = 0, depDev = 0;
-                                        let depSociale = 0;
                                         const cHide = estComite ? "" : "hidden";
-
-                                        // Calcul automatique du budget d'entraide basé sur les dépenses de la catégorie 'Social'
-                                        fDepenses.forEach(d => {
-                                            if (d.categorie === "Social") { depSociale += Number(d.montant); }
-                                        });
-
-                                        // Remplissage de l'affichage de l'analyse sociale
-                                        document.getElementById('ana-dep-soc').innerText = depSociale.toLocaleString() + " CDF";
-
-                                        // Remplissage du répertoire des veuves et orphelins
-                                        let idxS = 1;
-                                        document.getElementById('table-social-body').innerHTML = r8.data.map(s => `<tr><td>${idxS++}</td><td style="font-weight:600;">${s.nom_complet}</td><td><span style="color:#a855f7;font-weight:bold;">${s.categorie}</span></td><td>${s.adresse||'-'}</td><td>${s.contact_tuteur||'-'}</td><td>${s.assistance_accordee||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('assistance_sociale', ${s.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="7" style="color:#94a3b8;text-align:center;">Aucun enregistrement social</td></tr>';
-
 
                                         // Filtrage local au jour le jour pour éviter de surcharger l'écran
                                         let fEntrees = r1.data ? r1.data.filter(x => (!deb || x.date_transaction >= deb) && (!fin || x.date_transaction <= fin)) : [];
