@@ -126,6 +126,7 @@
                 <button onclick="changerOnglet('tab-projets')" id="btn-tab-projets" class="onglet-btn">🧱 Plan en Cours</button>
                 <button onclick="changerOnglet('tab-programmes')" id="btn-tab-programmes" class="onglet-btn">🗓️ Programme</button>
                 <button onclick="changerOnglet('tab-analyses')" id="btn-tab-analyses" class="onglet-btn">📈 Analyses</button>
+                <button onclick="changerOnglet('tab-social')" id="btn-tab-social" class="onglet-btn">💜 Social & Entraide</button>
             </div>
         </div>
 
@@ -237,7 +238,19 @@
                     </form>
                     <div class="table-responsive"><table><thead><tr><th>Date</th><th>Thème Général & Déroulement</th><th>Prédicateur</th><th>Modérateur</th><th>H / F / E / V</th><th>Présence Totale</th><th class="zone-comite hidden">Actions</th></tr></thead><tbody id="table-programmes-body"></tbody></table></div>
                   </div>
-                                    <!-- NOUVEL ONGLET DES ANALYSES DE PÉRIODE -->
+                 <!-- NOUVEL ONGLET SOCIAL : VEUVES ET ORPHELINS -->
+                <div id="tab-social" class="onglet-content hidden">
+                    <form id="form-social" class="zone-comite hidden form-saisie">
+                        <input type="text" id="nom_social" class="input-text" style="flex:2;" placeholder="Nom Complet de la veuve / orphelin" required>
+                        <select id="cat_social" class="input-text"><option value="Veuve">Vuve</option><option value="Orphelin(e)">Orphelin(e)</option></select>
+                        <input type="text" id="adr_social" class="input-text" placeholder="Adresse physique">
+                        <input type="text" id="tel_social" class="input-text" placeholder="Contact ou Tuteur">
+                        <input type="text" id="aide_social" class="input-text" style="flex:2;" placeholder="Assistance accordée habituelle">
+                        <button type="submit" style="background:#a855f7; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; height:34px;">Enregistrer</button>
+                    </form>
+                    <div class="table-responsive"><table><thead><tr><th>N°</th><th>Nom Complet</th><th>Statut</th><th>Adresse</th><th>Contact / Tuteur</th><th>Assistance Accordée</th><th class="zone-comite hidden">Actions</th></tr></thead><tbody id="table-social-body"></tbody></table></div>
+                </div>
+                <!-- NOUVEL ONGLET DES ANALYSES DE PÉRIODE -->
                 <div id="tab-analyses" class="onglet-content hidden" style="padding-top: 0.5rem;">
                     <h3 style="margin: 0 0 0.75rem 0; color: #38bdf8; font-size: 1.1rem; text-align: center;">📊 Rapport Analytique de la Période Demandée</h3>
                     <div class="grid" style="grid-template-columns: 1fr; gap: 0.75rem;">
@@ -254,6 +267,11 @@
                             <p style="margin: 0.25rem 0; font-size: 0.85rem; color: #94a3b8;">Total Entrées : <span id="ana-ent-dev" style="color: #34d399; font-weight: bold;">0 CDF</span></p>
                             <p style="margin: 0.25rem 0; font-size: 0.85rem; color: #94a3b8;">Total Dépenses : <span id="ana-dep-dev" style="color: #f87171; font-weight: bold;">0 CDF</span></p>
                             <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; font-weight: bold; color: #fff;">Bilan Net Période : <span id="ana-solde-dev">0 CDF</span></p>
+                        </div>
+                         <!-- BLOC ANALYSE SOCIAL & ENTRAIDE -->
+                        <div style="background: #0f172a; padding: 1rem; border-radius: 0.75rem; border: 1px solid #334155;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #a855f7; font-size: 0.9rem; border-bottom: 1px solid #334155; padding-bottom: 0.25rem;">💜 VOLET SOCIAL (VEUVES & ORPHELINS)</h4>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem; color: #94a3b8;">Dépenses d'Entraide : <span id="ana-dep-soc" style="color: #f87171; font-weight: bold;">0 CDF</span></p>
                         </div>
                     </div>
                 </div>
@@ -361,6 +379,11 @@
             const rows = { theme: document.getElementById('theme_culte').value, predicateur: document.getElementById('predi_culte').value, moderateur: document.getElementById('mode_culte').value, nb_hommes: document.getElementById('nb_h').value, nb_femmes: document.getElementById('nb_f').value, nb_enfants: document.getElementById('nb_e').value, nb_visiteurs: document.getElementById('nb_v').value };
             supabaseClient.from('programmes_cultes').insert([rows]).then(() => { document.getElementById('form-programme').reset(); chargerDonneesTableaux(); }); 
         });
+                document.getElementById('form-social').addEventListener('submit', function(e){ 
+            e.preventDefault(); 
+            const rows = { nom_complet: document.getElementById('nom_social').value, categorie: document.getElementById('cat_social').value, adresse: document.getElementById('adr_social').value, contact_tuteur: document.getElementById('tel_social').value, assistance_accordee: document.getElementById('aide_social').value };
+            supabaseClient.from('assistance_sociale').insert([rows]).then(() => { document.getElementById('form-social').reset(); chargerDonneesTableaux(); }); 
+        });
 
         // FONCTION UNIVERSELLE DE SUPPRESSION POUR CORRIGER LES ERREURS HUMAINES PARTOUT
         function supprimerLigne(table, id) {
@@ -386,10 +409,26 @@
                             supabaseClient.from('documents_sacres').select().then(r5 => {
                                 supabaseClient.from('projets').select().then(r6 => {
                                     supabaseClient.from('programmes_cultes').select().then(r7 => {
+                                        supabaseClient.from('assistance_sociale').select().then(r8 => {
+
                                         let tE = 0, tD = 0;
                                         let recFonc = 0, recDev = 0;
                                         let depFonc = 0, depDev = 0;
+                                        let depSociale = 0;
                                         const cHide = estComite ? "" : "hidden";
+
+                                        // Calcul automatique du budget d'entraide basé sur les dépenses de la catégorie 'Social'
+                                        fDepenses.forEach(d => {
+                                            if (d.categorie === "Social") { depSociale += Number(d.montant); }
+                                        });
+
+                                        // Remplissage de l'affichage de l'analyse sociale
+                                        document.getElementById('ana-dep-soc').innerText = depSociale.toLocaleString() + " CDF";
+
+                                        // Remplissage du répertoire des veuves et orphelins
+                                        let idxS = 1;
+                                        document.getElementById('table-social-body').innerHTML = r8.data.map(s => `<tr><td>${idxS++}</td><td style="font-weight:600;">${s.nom_complet}</td><td><span style="color:#a855f7;font-weight:bold;">${s.categorie}</span></td><td>${s.adresse||'-'}</td><td>${s.contact_tuteur||'-'}</td><td>${s.assistance_accordee||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('assistance_sociale', ${s.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="7" style="color:#94a3b8;text-align:center;">Aucun enregistrement social</td></tr>';
+
 
                                         // Filtrage local au jour le jour pour éviter de surcharger l'écran
                                         let fEntrees = r1.data ? r1.data.filter(x => (!deb || x.date_transaction >= deb) && (!fin || x.date_transaction <= fin)) : [];
