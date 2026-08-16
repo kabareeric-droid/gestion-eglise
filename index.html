@@ -107,10 +107,11 @@
                 <span>au</span>
                 <input type="date" id="date-fin" onchange="chargerDonneesTableaux()" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.5rem;">
             </div>
-            <div class="grid grid-3" style="width: 100%; max-width: 500px; gap: 0.5rem;">
-                <div class="card-stat" style="border-left-color: #10b981; background: #f0fdf4;"><p style="margin:0; font-size:0.75rem; color:#6b7280;">RECETTES</p><p id="stat-entrees" style="margin:5px 0 0 0; font-weight:900; color:#059669;">0 CDF</p></div>
-                <div class="card-stat" style="border-left-color: #ef4444; background: #fef2f2;"><p style="margin:0; font-size:0.75rem; color:#6b7280;">DÉPENSES</p><p id="stat-depenses" style="margin:5px 0 0 0; font-weight:900; color:#dc2626;">0 CDF</p></div>
-                <div class="card-stat" style="border-left-color: #3b82f6; background: #eff6ff;"><p style="margin:0; font-size:0.75rem; color:#6b7280;">SOLDE CAISSE</p><p id="stat-solde" style="margin:5px 0 0 0; font-weight:900; color:#1e3a8a;">0 CDF</p></div>
+                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem; width: 100%;">
+                <div class="card-stat" style="border-left-color: #3b82f6; background: #eff6ff;"><p style="margin:0; font-size:0.75rem; color:#6b7280; font-weight:bold;">💰 CAISSE FONCTIONNEMENT</p><p id="stat-caisse-fonc" style="margin:5px 0 0 0; font-weight:900; color:#1e3a8a;">0 CDF</p></div>
+                <div class="card-stat" style="border-left-color: #8b5cf6; background: #f5f3ff;"><p style="margin:0; font-size:0.75rem; color:#6b7280; font-weight:bold;">🧱 CAISSE DÉVELOPPEMENT</p><p id="stat-caisse-dev" style="margin:5px 0 0 0; font-weight:900; color:#6d28d9;">0 CDF</p></div>
+                <div class="card-stat" style="border-left-color: #10b981; background: #f0fdf4;"><p style="margin:0; font-size:0.75rem; color:#6b7280; font-weight:bold;">📥 TOTAL RECETTES</p><p id="stat-entrees" style="margin:5px 0 0 0; font-weight:900; color:#059669;">0 CDF</p></div>
+                <div class="card-stat" style="border-left-color: #ef4444; background: #fef2f2;"><p style="margin:0; font-size:0.75rem; color:#6b7280; font-weight:bold;">📤 TOTAL DÉPENSES</p><p id="stat-depenses" style="margin:5px 0 0 0; font-weight:900; color:#dc2626;">0 CDF</p></div>
             </div>
         </div>
 
@@ -348,7 +349,9 @@
                             supabaseClient.from('documents_sacres').select().then(r5 => {
                                 supabaseClient.from('projets').select().then(r6 => {
                                     supabaseClient.from('programmes_cultes').select().then(r7 => {
-                                        let tE = 0, tD = 0;
+                                                                                let tE = 0, tD = 0;
+                                        let recFonc = 0, recDev = 0;
+                                        let depFonc = 0, depDev = 0;
                                         const cHide = estComite ? "" : "hidden";
 
                                         // Filtrage chronologique au jour le jour pour l'ergonomie visuelle
@@ -356,16 +359,34 @@
                                         let fDepenses = r2.data ? r2.data.filter(x => (!deb || x.date_depense >= deb) && (!fin || x.date_depense <= fin)) : [];
                                         let fProgrammes = r7.data ? r7.data.filter(x => (!deb || x.date_culte >= deb) && (!fin || x.date_culte <= fin)) : [];
 
-                                        // 1. Remplissage Entrées
-                                        document.getElementById('table-entrees-body').innerHTML = fEntrees.map(e => { tE += Number(e.montant); return `<tr><td>${e.date_transaction}</td><td style="color:green;font-weight:bold;">${e.type_entree}</td><td>${e.motif_special||'-'}</td><td style="color:green;font-weight:bold;">+ ${Number(e.montant).toLocaleString()} CDF</td><td class="${cHide}"><button onclick="supprimerLigne('transactions', ${e.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`; }).join('') || '<tr><td colspan="5">Aucune saisie aujourd\'hui</td></tr>';
+                                        // 1. Calcul et Remplissage Entrées par secteur
+                                        document.getElementById('table-entrees-body').innerHTML = fEntrees.map(e => { 
+                                            const m = Number(e.montant);
+                                            tE += m; 
+                                            if (e.type_entree === "Offrande Développement") { recDev += m; } 
+                                            else { recFonc += m; }
+                                            return `<tr><td>${e.date_transaction}</td><td style="color:green;font-weight:bold;">${e.type_entree}</td><td>${e.motif_special||'-'}</td><td style="color:green;font-weight:bold;">+ ${m.toLocaleString()} CDF</td><td class="${cHide}"><button onclick="supprimerLigne('transactions', ${e.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`; 
+                                        }).join('') || '<tr><td colspan="5">Aucune saisie aujourd\'hui</td></tr>';
                                         
-                                        // 2. Remplissage Sorties
-                                        document.getElementById('table-sorties-body').innerHTML = fDepenses.map(d => { tD += Number(d.montant); return `<tr><td>${d.date_depense}</td><td style="font-weight:bold;">${d.categorie}</td><td style="color:#4f46e5;font-weight:600;">${d.source_financement||'Caisse Fonctionnement'}</td><td>${d.motif}</td><td style="color:red;font-weight:bold;">- ${Number(d.montant).toLocaleString()} CDF</td><td class="${cHide}"><button onclick="supprimerLigne('depenses', ${d.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`; }).join('') || '<tr><td colspan="6">Aucune saisie aujourd\'hui</td></tr>';
+                                        // 2. Calcul et Remplissage Sorties par secteur
+                                        document.getElementById('table-sorties-body').innerHTML = fDepenses.map(d => { 
+                                            const m = Number(d.montant);
+                                            tD += m; 
+                                            if (d.source_financement === "Caisse Développement") { depDev += m; } 
+                                            else { depFonc += m; }
+                                            return `<tr><td>${d.date_depense}</td><td style="font-weight:bold;">${d.categorie}</td><td style="color:#4f46e5;font-weight:600;">${d.source_financement||'Caisse Fonctionnement'}</td><td>${d.motif}</td><td style="color:red;font-weight:bold;">- ${m.toLocaleString()} CDF</td><td class="${cHide}"><button onclick="supprimerLigne('depenses', ${d.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`; 
+                                        }).join('') || '<tr><td colspan="6">Aucune saisie aujourd\'hui</td></tr>';
                                         
-                                        // Compteurs Généraux Périodiques
+                                        // Calcul des deux enveloppes étanches
+                                        let soldeFonc = recFonc - depFonc;
+                                        let soldeDev = recDev - depDev;
+
+                                        // Mise à jour des 4 compteurs distincts à l'écran
+                                        document.getElementById('stat-caisse-fonc').innerText = soldeFonc.toLocaleString() + " CDF";
+                                        document.getElementById('stat-caisse-dev').innerText = soldeDev.toLocaleString() + " CDF";
                                         document.getElementById('stat-entrees').innerText = tE.toLocaleString() + " CDF";
                                         document.getElementById('stat-depenses').innerText = tD.toLocaleString() + " CDF";
-                                        document.getElementById('stat-solde').innerText = (tE - tD).toLocaleString() + " CDF";
+
 
                                         // 3. Remplissage Fidèles
                                         let iM=1; document.getElementById('table-membres-body').innerHTML = r3.data.map(m => `<tr><td>${iM++}</td><td>${m.nom_postnom}</td><td>${m.baptise}</td><td>${m.etat_civil||'-'}</td><td>${m.adresse||'-'}</td><td>${m.contact||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('membres', ${m.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="7">Aucun fidèle enregistré</td></tr>';
