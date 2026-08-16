@@ -419,6 +419,16 @@
                                         document.getElementById('stat-caisse-dev').innerText = soldeDev.toLocaleString() + " CDF";
                                         document.getElementById('stat-entrees').innerText = tE.toLocaleString() + " CDF";
                                         document.getElementById('stat-depenses').innerText = tD.toLocaleString() + " CDF";
+                                        // MISE À JOUR DE L'ONGLET ANALYSES SUR LA PÉRIODE DEMANDÉE
+                                        document.getElementById('ana-ent-fonc').innerText = recFonc.toLocaleString() + " CDF";
+                                        document.getElementById('ana-dep-fonc').innerText = depFonc.toLocaleString() + " CDF";
+                                        document.getElementById('ana-solde-fonc').innerText = soldeFonc.toLocaleString() + " CDF";
+                                        document.getElementById('ana-solde-fonc').style.color = soldeFonc >= 0 ? "#34d399" : "#f87171";
+
+                                        document.getElementById('ana-ent-dev').innerText = recDev.toLocaleString() + " CDF";
+                                        document.getElementById('ana-dep-dev').innerText = depDev.toLocaleString() + " CDF";
+                                        document.getElementById('ana-solde-dev').innerText = soldeDev.toLocaleString() + " CDF";
+                                        document.getElementById('ana-solde-dev').style.color = soldeDev >= 0 ? "#c084fc" : "#f87171";
 
                                         // 3. Remplissage Fidèles
                                         let iM=1; document.getElementById('table-membres-body').innerHTML = r3.data.map(m => `<tr><td>${iM++}</td><td style="font-weight:600;">${m.nom_postnom}</td><td><span style="color:#34d399;font-weight:bold;">${m.baptise}</span></td><td>${m.etat_civil||'-'}</td><td>${m.adresse||'-'}</td><td style="font-weight:bold;color:#38bdf8;">${m.contact||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('membres', ${m.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="7" style="color:#94a3b8;text-align:center;">Aucun fidèle enregistré</td></tr>';
