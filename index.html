@@ -394,7 +394,7 @@
                 });
             }
         }
-        // REQUÊTES ET MISE À JOUR EN TEMPS RÉEL DES TABLEAUX EN CDF
+               // REQUÊTES ET MISE À JOUR EN TEMPS RÉEL DES TABLEAUX EN CDF
         function chargerDonneesTableaux() {
             const deb = document.getElementById('date-debut').value;
             const fin = document.getElementById('date-fin').value;
@@ -410,65 +410,73 @@
                                 supabaseClient.from('projets').select().then(r6 => {
                                     supabaseClient.from('programmes_cultes').select().then(r7 => {
                                         supabaseClient.from('assistance_sociale').select().then(r8 => {
+                                            let tE = 0, tD = 0;
+                                            let recFonc = 0, recDev = 0;
+                                            let depFonc = 0, depDev = 0;
+                                            let depSociale = 0;
+                                            const cHide = estComite ? "" : "hidden";
 
-                                        let tE = 0, tD = 0;
-                                        let recFonc = 0, recDev = 0;
-                                        let depFonc = 0, depDev = 0;
-                                        const cHide = estComite ? "" : "hidden";
+                                            // Filtrage local au jour le jour pour l'ergonomie visuelle
+                                            let fEntrees = r1.data ? r1.data.filter(x => (!deb || x.date_transaction >= deb) && (!fin || x.date_transaction <= fin)) : [];
+                                            let fDepenses = r2.data ? r2.data.filter(x => (!deb || x.date_depense >= deb) && (!fin || x.date_depense <= fin)) : [];
+                                            let fProgrammes = r7.data ? r7.data.filter(x => (!deb || x.date_culte >= deb) && (!fin || x.date_culte <= fin)) : [];
 
-                                        // Filtrage local au jour le jour pour éviter de surcharger l'écran
-                                        let fEntrees = r1.data ? r1.data.filter(x => (!deb || x.date_transaction >= deb) && (!fin || x.date_transaction <= fin)) : [];
-                                        let fDepenses = r2.data ? r2.data.filter(x => (!deb || x.date_depense >= deb) && (!fin || x.date_depense <= fin)) : [];
-                                        let fProgrammes = r7.data ? r7.data.filter(x => (!deb || x.date_culte >= deb) && (!fin || x.date_culte <= fin)) : [];
+                                            // 1. Calcul et Remplissage Entrées par caisse
+                                            document.getElementById('table-entrees-body').innerHTML = fEntrees.map(e => { 
+                                                const m = Number(e.montant); tE += m;
+                                                if (e.type_entree === "Offrande Développement") { recDev += m; } else { recFonc += m; }
+                                                return `<tr><td>${e.date_transaction}</td><td style="color:#34d399;font-weight:bold;">${e.type_entree}</td><td>${e.motif_special||'-'}</td><td style="color:#34d399;font-weight:bold;">+ ${m.toLocaleString()} CDF</td><td class="${cHide}"><button onclick="supprimerLigne('transactions', ${e.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`; 
+                                            }).join('') || '<tr><td colspan="5" style="color:#94a3b8;text-align:center;">Aucune entrée aujourd\'hui</td></tr>';
+                                            
+                                            // 2. Calcul et Remplissage Sorties par caisse
+                                            document.getElementById('table-sorties-body').innerHTML = fDepenses.map(d => { 
+                                                const m = Number(d.montant); tD += m;
+                                                if (d.source_financement === "Caisse Développement") { depDev += m; } else { depFonc += m; }
+                                                if (d.categorie === "Social") { depSociale += m; }
+                                                return `<tr><td>${d.date_depense}</td><td style="font-weight:bold;">${d.categorie}</td><td style="color:#c084fc;font-weight:700;">${d.source_financement||'Caisse Fonctionnement'}</td><td>${d.motif}</td><td style="color:#f87171;font-weight:bold;">- ${m.toLocaleString()} CDF</td><td class="${cHide}"><button onclick="supprimerLigne('depenses', ${d.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`; 
+                                            }).join('') || '<tr><td colspan="6" style="color:#94a3b8;text-align:center;">Aucune sortie aujourd\'hui</td></tr>';
+                                            
+                                            // Calcul des enveloppes étanches
+                                            let soldeFonc = recFonc - depFonc;
+                                            let soldeDev = recDev - depDev;
 
-                                        // 1. Calcul et Remplissage Entrées par caisse
-                                        document.getElementById('table-entrees-body').innerHTML = fEntrees.map(e => { 
-                                            const m = Number(e.montant); tE += m;
-                                            if (e.type_entree === "Offrande Développement") { recDev += m; } else { recFonc += m; }
-                                            return `<tr><td>${e.date_transaction}</td><td style="color:#34d399;font-weight:bold;">${e.type_entree}</td><td>${e.motif_special||'-'}</td><td style="color:#34d399;font-weight:bold;">+ ${m.toLocaleString()} CDF</td><td class="${cHide}"><button onclick="supprimerLigne('transactions', ${e.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`; 
-                                        }).join('') || '<tr><td colspan="5" style="color:#94a3b8;text-align:center;">Aucune entrée aujourd\'hui</td></tr>';
-                                        
-                                        // 2. Calcul et Remplissage Sorties par caisse
-                                        document.getElementById('table-sorties-body').innerHTML = fDepenses.map(d => { 
-                                            const m = Number(d.montant); tD += m;
-                                            if (d.source_financement === "Caisse Développement") { depDev += m; } else { depFonc += m; }
-                                            return `<tr><td>${d.date_depense}</td><td style="font-weight:bold;">${d.categorie}</td><td style="color:#c084fc;font-weight:700;">${d.source_financement||'Caisse Fonctionnement'}</td><td>${d.motif}</td><td style="color:#f87171;font-weight:bold;">- ${m.toLocaleString()} CDF</td><td class="${cHide}"><button onclick="supprimerLigne('depenses', ${d.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`; 
-                                        }).join('') || '<tr><td colspan="6" style="color:#94a3b8;text-align:center;">Aucune sortie aujourd\'hui</td></tr>';
-                                        
-                                        // Calcul des deux enveloppes étanches
-                                        let soldeFonc = recFonc - depFonc;
-                                        let soldeDev = recDev - depDev;
+                                            // Mise à jour des 4 compteurs distincts
+                                            document.getElementById('stat-caisse-fonc').innerText = soldeFonc.toLocaleString() + " CDF";
+                                            document.getElementById('stat-caisse-dev').innerText = soldeDev.toLocaleString() + " CDF";
+                                            document.getElementById('stat-entrees').innerText = tE.toLocaleString() + " CDF";
+                                            document.getElementById('stat-depenses').innerText = tD.toLocaleString() + " CDF";
 
-                                        // Mise à jour des 4 compteurs distincts à l'écran
-                                        document.getElementById('stat-caisse-fonc').innerText = soldeFonc.toLocaleString() + " CDF";
-                                        document.getElementById('stat-caisse-dev').innerText = soldeDev.toLocaleString() + " CDF";
-                                        document.getElementById('stat-entrees').innerText = tE.toLocaleString() + " CDF";
-                                        document.getElementById('stat-depenses').innerText = tD.toLocaleString() + " CDF";
-                                        // MISE À JOUR DE L'ONGLET ANALYSES SUR LA PÉRIODE DEMANDÉE
-                                        document.getElementById('ana-ent-fonc').innerText = recFonc.toLocaleString() + " CDF";
-                                        document.getElementById('ana-dep-fonc').innerText = depFonc.toLocaleString() + " CDF";
-                                        document.getElementById('ana-solde-fonc').innerText = soldeFonc.toLocaleString() + " CDF";
-                                        document.getElementById('ana-solde-fonc').style.color = soldeFonc >= 0 ? "#34d399" : "#f87171";
+                                            // 3. Remplissage Fidèles
+                                            let iM=1; document.getElementById('table-membres-body').innerHTML = r3.data.map(m => `<tr><td>${iM++}</td><td style="font-weight:600;">${m.nom_postnom}</td><td><span style="color:#34d399;font-weight:bold;">${m.baptise}</span></td><td>${m.etat_civil||'-'}</td><td>${m.adresse||'-'}</td><td style="font-weight:bold;color:#38bdf8;">${m.contact||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('membres', ${m.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="7" style="color:#94a3b8;text-align:center;">Aucun fidèle enregistré</td></tr>';
+                                            
+                                            // 4. Remplissage Biens
+                                            let iB=1; document.getElementById('table-biens-body').innerHTML = r4.data.map(b => `<tr><td>${iB++}</td><td style="font-weight:600;">${b.designation}</td><td style="font-weight:bold;">${b.quantite}</td><td><span style="color:#eab308;font-weight:bold;">${b.etat}</span></td><td class="${cHide}"><button onclick="supprimerLigne('biens', ${b.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="5" style="color:#94a3b8;text-align:center;">Aucun bien répertorié</td></tr>';
+                                            // 5. Remplissage Documents Sacrés
+                                            let iD=1; document.getElementById('table-documents-body').innerHTML = r5.data.map(d => `<tr><td>${iD++}</td><td style="font-weight:600;color:#c084fc;">${d.titre_document}</td><td>${d.categorie||'-'}</td><td style="font-style:italic;">📍 ${d.lieu_conservation}</td><td class="${cHide}"><button onclick="supprimerLigne('documents_sacres', ${d.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="5" style="color:#94a3b8;text-align:center;">Aucun document consigné</td></tr>';
+                                            
+                                            // 6. Remplissage Plan en Cours (Projets)
+                                            let iP=1; document.getElementById('table-projets-body').innerHTML = r6.data.map(p => `<tr><td>${iP++}</td><td style="font-weight:600;">${p.nom_projet}</td><td style="font-weight:bold;color:#38bdf8;">${Number(p.budget_estime_cdf).toLocaleString()} CDF</td><td>${p.responsable||'-'}</td><td style="font-weight:bold;color:#6366f1;">${p.statut}</td><td class="${cHide}"><button onclick="supprimerLigne('projets', ${p.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="6" style="color:#94a3b8;text-align:center;">Aucun projet enregistré</td></tr>';
+                                            
+                                            // 7. Remplissage Programme (Suivi des Cultes)
+                                            document.getElementById('table-programmes-body').innerHTML = fProgrammes.map(pr => `<tr><td>${pr.date_culte}</td><td><b>Thème : ${pr.theme}</b></td><td>${pr.predicateur||'-'}</td><td>${pr.moderateur||'-'}</td><td>👨${pr.nb_hommes} | 👩${pr.nb_femmes} | 👧${pr.nb_enfants} | 👥${pr.nb_visiteurs||0}</td><td style="font-weight:bold;color:#0d9488;background:#042f2e;text-align:center;border-radius:4px;">${(Number(pr.nb_hommes)+Number(pr.nb_femmes)+Number(pr.nb_enfants)+Number(pr.nb_visiteurs||0)).toLocaleString()} Total</td><td class="${cHide}"><button onclick="supprimerLigne('programmes_cultes', ${pr.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="7" style="color:#94a3b8;text-align:center;">Aucune activité enregistrée</td></tr>';
 
-                                        document.getElementById('ana-ent-dev').innerText = recDev.toLocaleString() + " CDF";
-                                        document.getElementById('ana-dep-dev').innerText = depDev.toLocaleString() + " CDF";
-                                        document.getElementById('ana-solde-dev').innerText = soldeDev.toLocaleString() + " CDF";
-                                        document.getElementById('ana-solde-dev').style.color = soldeDev >= 0 ? "#c084fc" : "#f87171";
+                                            // 8. Remplissage Répertoire Social (Veuves et Orphelins)
+                                            let idxS = 1;
+                                            document.getElementById('table-social-body').innerHTML = r8.data.map(s => `<tr><td>${idxS++}</td><td style="font-weight:600;">${s.nom_complet}</td><td><span style="color:#a855f7;font-weight:bold;">${s.categorie}</span></td><td>${s.adresse||'-'}</td><td>${s.contact_tuteur||'-'}</td><td>${s.assistance_accordee||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('assistance_sociale', ${s.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="7" style="color:#94a3b8;text-align:center;">Aucun enregistrement social</td></tr>';
 
-                                        // 3. Remplissage Fidèles
-                                        let iM=1; document.getElementById('table-membres-body').innerHTML = r3.data.map(m => `<tr><td>${iM++}</td><td style="font-weight:600;">${m.nom_postnom}</td><td><span style="color:#34d399;font-weight:bold;">${m.baptise}</span></td><td>${m.etat_civil||'-'}</td><td>${m.adresse||'-'}</td><td style="font-weight:bold;color:#38bdf8;">${m.contact||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('membres', ${m.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="7" style="color:#94a3b8;text-align:center;">Aucun fidèle enregistré</td></tr>';
-                                        
-                                        // 4. Remplissage Biens
-                                        let iB=1; document.getElementById('table-biens-body').innerHTML = r4.data.map(b => `<tr><td>${iB++}</td><td style="font-weight:600;">${b.designation}</td><td style="font-weight:bold;">${b.quantite}</td><td><span style="color:#eab308;font-weight:bold;">${b.etat}</span></td><td class="${cHide}"><button onclick="supprimerLigne('biens', ${b.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="5" style="color:#94a3b8;text-align:center;">Aucun bien répertorié</td></tr>';
-                                        
-                                        // 5. Remplissage Documents
-                                        let iD=1; document.getElementById('table-documents-body').innerHTML = r5.data.map(d => `<tr><td>${iD++}</td><td style="font-weight:600;color:#c084fc;">${d.titre_document}</td><td>${d.categorie||'-'}</td><td style="font-style:italic;">📍 ${d.lieu_conservation}</td><td class="${cHide}"><button onclick="supprimerLigne('documents_sacres', ${d.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="5" style="color:#94a3b8;text-align:center;">Aucun document consigné</td></tr>';
-                                        
-                                        // 6. Remplissage Plan en Cours
-                                        let iP=1; document.getElementById('table-projets-body').innerHTML = r6.data.map(p => `<tr><td>${iP++}</td><td style="font-weight:600;">${p.nom_projet}</td><td style="font-weight:bold;color:#38bdf8;">${Number(p.budget_estime_cdf).toLocaleString()} CDF</td><td>${p.responsable||'-'}</td><td style="font-weight:bold;color:#6366f1;">${p.statut}</td><td class="${cHide}"><button onclick="supprimerLigne('projets', ${p.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="6" style="color:#94a3b8;text-align:center;">Aucun projet enregistré</td></tr>';
-                                        
-                                        // 7. Remplissage Programme (Calcul Fréquentation Globale Avec Visiteurs)
-                                        document.getElementById('table-programmes-body').innerHTML = fProgrammes.map(pr => `<tr><td>${pr.date_culte}</td><td><b>Thème : ${pr.theme}</b></td><td>${pr.predicateur||'-'}</td><td>${pr.moderateur||'-'}</td><td>👨${pr.nb_hommes} | 👩${pr.nb_femmes} | 👧${pr.nb_enfants} | 👥${pr.nb_visiteurs||0}</td><td style="font-weight:bold;color:#0d9488;background:#042f2e;text-align:center;border-radius:4px;">${(Number(pr.nb_hommes)+Number(pr.nb_femmes)+Number(pr.nb_enfants)+Number(pr.nb_visiteurs||0)).toLocaleString()} Total</td><td class="${cHide}"><button onclick="supprimerLigne('programmes_cultes', ${pr.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="7" style="color:#94a3b8;text-align:center;">Aucune activité aujourd\'hui</td></tr>';
+                                            // 9. Rapports d'Analyses Comptables de la Période
+                                            document.getElementById('ana-ent-fonc').innerText = recFonc.toLocaleString() + " CDF";
+                                            document.getElementById('ana-dep-fonc').innerText = depFonc.toLocaleString() + " CDF";
+                                            document.getElementById('ana-solde-fonc').innerText = soldeFonc.toLocaleString() + " CDF";
+                                            document.getElementById('ana-solde-fonc').style.color = soldeFonc >= 0 ? "#34d399" : "#f87171";
+
+                                            document.getElementById('ana-ent-dev').innerText = recDev.toLocaleString() + " CDF";
+                                            document.getElementById('ana-dep-dev').innerText = depDev.toLocaleString() + " CDF";
+                                            document.getElementById('ana-solde-dev').innerText = soldeDev.toLocaleString() + " CDF";
+                                            document.getElementById('ana-solde-dev').style.color = soldeDev >= 0 ? "#c084fc" : "#f87171";
+
+                                            document.getElementById('ana-dep-soc').innerText = depSociale.toLocaleString() + " CDF";
+                                        });
                                     });
                                 });
                             });
@@ -483,3 +491,4 @@
     </script>
 </body>
 </html>
+
