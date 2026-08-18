@@ -159,23 +159,39 @@
                     </div>
                 </div>
 
-                <!-- 3. CRÉATION ET GESTION DES COMPTES ÉCHELONS -->
+                                            <!-- Section B : Création des Comptes avec Sous-Menu Intelligent Réservé aux Couches Sociales -->
                 <div style="background: #f8fafc; padding: 0.65rem; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
                     <label style="font-size: 0.85rem; font-weight: 800; color: var(--primary);">👤 Ajouter un Nouvel Échelon d'Accès :</label>
-                    <form id="form-creer-utilisateur" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.5rem; margin-top: 6px; align-items: flex-end;">
-                        <input type="text" id="new_username" class="input-text" placeholder="Identifiant (Ex: MAMANS)" style="text-transform: uppercase;" required>
-                        <input type="text" id="new_password" class="input-text" placeholder="Mot de passe" required>
-                        <select id="new_echelon" class="input-text">
-                            <option value="Comité">Comité de Développement</option>
-                            <option value="Serviteur">Serviteur / Pasteur</option>
-                            <option value="Couche Sociale">Leader Couche Sociale</option>
-                            <option value="Social">Gestion Sociale (Assistance)</option>
-                        </select>
-                        <button type="submit" style="background: #10b981; color: white; border: none; padding: 0.6rem; border-radius: 0.375rem; font-weight: bold; cursor: pointer;">Créer Compte</button>
+                    <form id="form-creer-utilisateur" style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 6px;">
+                        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.4rem;">
+                            <input type="text" id="new_username" class="input-text" placeholder="Identifiant (Ex: MAMANS)" style="text-transform: uppercase;" required>
+                            <input type="text" id="new_password" class="input-text" placeholder="Mot de passe" required>
+                            
+                            <!-- Sélecteur d'Échelon Principal -->
+                            <select id="new_echelon" class="input-text" onchange="gererAffichageSousMenuDepartement(this.value)">
+                                <option value="Comité">Comité de Développement</option>
+                                <option value="Serviteur">Serviteur / Pasteur</option>
+                                <option value="Couche Sociale">Leader Couche Sociale</option>
+                                <option value="Social">Gestion Sociale (Assistance)</option>
+                            </select>
+
+                            <!-- LE SOUS-MENU DE SPÉCIFICATION (CACHÉ PAR DÉFAUT - APPARAÎT UNIQUEMENT POUR LES COUCHES) -->
+                            <select id="new_sub_dept" class="input-text hidden" style="border-color: #d97706;">
+                                <option value="Général">-- Choisir la Couche Spécifique --</option>
+                                <option value="Maman de l'Église">👩 Maman de l'Église</option>
+                                <option value="Papa de l'Église">👨 Papa de l'Église</option>
+                                <option value="Jeunesse / Flambeau">⚡ Jeunesse / Flambeau</option>
+                                <option value="École du Dimanche (ECODIM)">👶 École du Dimanche (ECODIM)</option>
+                                <option value="Évangélisation & Mission">📢 Évangélisation & Mission</option>
+                                <option value="Chorales & Louange">🎵 Chorales & Louange</option>
+                            </select>
+                        </div>
+                        <button type="submit" style="background: #10b981; color: white; border: none; padding: 0.65rem; border-radius: 0.375rem; font-weight: bold; cursor: pointer; width: 100%;">Créer et Activer le Compte Échelon</button>
                     </form>
+                    
                     <div style="margin-top: 0.5rem; overflow-x: auto;">
                         <table style="min-width: 100%;">
-                            <thead><tr><th>Identifiant</th><th>Mot de passe</th><th>Échelon</th><th>Action</th></tr></thead>
+                            <thead><tr><th>Identifiant</th><th>Mot de passe</th><th>Échelon</th><th>Spécification</th><th>Action</th></tr></thead>
                             <tbody id="table-utilisateurs-body"></tbody>
                         </table>
                     </div>
@@ -673,6 +689,20 @@
                 } catch(e){}
 
             }); }); }); }); }); }); }); }); }); }); });
+        }
+        // Fonction magique qui affiche le sous-menu UNIQUEMENT pour l'échelon Couche Sociale
+        function gererAffichageSousMenuDepartement(valeurEchelon) {
+            const sousMenu = document.getElementById('new_sub_dept');
+            if (!sousMenu) return;
+            
+            if (valeurEchelon === "Couche Sociale") {
+                sousMenu.classList.remove('hidden'); // On affiche le choix des groupes
+                sousMenu.required = true;
+            } else {
+                sousMenu.classList.add('hidden');    // On cache pour le Pasteur, Social et Président
+                sousMenu.value = "Général";           // Valeur automatique neutre
+                sousMenu.required = false;
+            }
         }
 
         // 5. COMPTEUR DE SÉCURITÉ INACTIVITÉ ET RECONCURRENCE DES SESSIONS
