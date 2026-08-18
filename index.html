@@ -115,16 +115,9 @@
             </div>
         </header>
 
-        <!-- PANEL DU SÉLECTEUR DE MENU DE CONTRÔLE (OUVERT PAR LE PRÉSIDENT SEUL) -->
-        <div id="panel-controle-president" class="card-box hidden" style="margin-bottom: 0.5rem; border-color: var(--primary);">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 0.75rem;">
-                <h3 style="margin: 0; color: var(--primary); font-weight: 900;">⚙️ MENU </h3>
-                <button onclick="fermerMenuControle()" style="background: none; border: none; font-size: 1.2rem; font-weight: bold; cursor: pointer; color: #64748b;">✕</button>
-            </div>
-            
-            <div class="grid" style="grid-template-columns: 1fr; gap: 1rem;">
-                <!-- Section A : Gestion des Thèmes pour les aînés -->
-                <div style="background: #f8fafc; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
+                  <div class="grid" style="grid-template-columns: 1fr; gap: 0.75rem;">
+                <!-- 1. ADAPTATION DU THEME POUR LES AÎNÉS -->
+                <div style="background: #f8fafc; padding: 0.65rem; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
                     <label style="font-size: 0.85rem; font-weight: 800; color: var(--primary);">🎨 Adapter l'Ambiance de l'Application :</label>
                     <select id="select-theme-app" onchange="changerThemeApplication(this.value)" class="input-text" style="margin-top: 4px;">
                         <option value="theme-bleu">1. Bleu Royal Église (Standard)</option>
@@ -140,8 +133,28 @@
                     </select>
                 </div>
 
-                <!-- Section B : Création et Gestion des Comptes échelons -->
-                <div style="background: #f8fafc; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
+                <!-- 2. RÉGULATION FINANCIÈRE : TAUX ET SEUILS DE SECURITÉ -->
+                <div style="background: #f8fafc; padding: 0.65rem; border-radius: 0.5rem; border: 1px solid #cbd5e1; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    <div style="flex: 1; min-width: 140px;">
+                        <label style="font-size: 0.85rem; font-weight: 800; color: #b45309;">💵 Taux du Jour (1 USD = ? CDF)</label>
+                        <input type="number" id="cfg_taux" class="input-text" style="margin-top:4px;" value="2850" onchange="sauvegarderParametresPresident()">
+                    </div>
+                    <div style="flex: 1; min-width: 140px;">
+                        <label style="font-size: 0.85rem; font-weight: 800; color: #b91c1c;">🚨 Alerte Réserve Minimale (CDF)</label>
+                        <input type="number" id="cfg_seuil" class="input-text" style="margin-top:4px;" value="200000" onchange="sauvegarderParametresPresident()">
+                    </div>
+                    <div style="flex: 1; min-width: 140px;">
+                        <label style="font-size: 0.85rem; font-weight: 800; color: #1e3a8a;">🔒 Clôture Mensuelle Intouchable</label>
+                        <select id="cfg_verrou" class="input-text" style="margin-top:4px;" onchange="sauvegarderParametresPresident()">
+                            <option value="Aucun">Aucun (Écritures Ouvertes)</option>
+                            <option value="2026-07">Verrouiller Juillet 2026</option>
+                            <option value="2026-08">Verrouiller Août 2026</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 3. CRÉATION ET GESTION DES COMPTES ÉCHELONS -->
+                <div style="background: #f8fafc; padding: 0.65rem; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
                     <label style="font-size: 0.85rem; font-weight: 800; color: var(--primary);">👤 Ajouter un Nouvel Échelon d'Accès :</label>
                     <form id="form-creer-utilisateur" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.5rem; margin-top: 6px; align-items: flex-end;">
                         <input type="text" id="new_username" class="input-text" placeholder="Identifiant (Ex: MAMANS)" style="text-transform: uppercase;" required>
@@ -154,8 +167,7 @@
                         </select>
                         <button type="submit" style="background: #10b981; color: white; border: none; padding: 0.6rem; border-radius: 0.375rem; font-weight: bold; cursor: pointer;">Créer Compte</button>
                     </form>
-                    
-                    <div style="margin-top: 0.75rem; overflow-x: auto;">
+                    <div style="margin-top: 0.5rem; overflow-x: auto;">
                         <table style="min-width: 100%;">
                             <thead><tr><th>Identifiant</th><th>Mot de passe</th><th>Échelon</th><th>Action</th></tr></thead>
                             <tbody id="table-utilisateurs-body"></tbody>
@@ -163,7 +175,6 @@
                     </div>
                 </div>
             </div>
-        </div>
         <!-- SYSTÈME D'ONGLETS INTÉGRAL (DÉFILANT SUR SMARTPHONE) -->
         <div style="background: var(--bg-card); border-radius: 0.75rem 0.75rem 0 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 0.4rem; border: 2px solid var(--border-color);">
             <div class="onglet-barre">
@@ -627,18 +638,59 @@
                 document.getElementById('table-couches-activites-body').innerHTML = aCouches.map(a => `<tr><td>${a.date_activite}</td><td>${a.couche_sociale}</td><td><b>${a.libelle_activite}</b></td><td style="color:#0d9488;font-weight:bold;">${a.nb_presents} Présents</td><td>${a.cree_par||'-'}</td><td class="${hideCS}"><button onclick="supprimerLigne('activites_couches_sociales', ${a.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="6">Aucune activité aujourd\'hui</td></tr>';
                 document.getElementById('table-couches-caisse-body').innerHTML = cCouches.map(c => `<tr><td>${c.date_mouvement}</td><td>${c.couche_sociale}</td><td>${c.libelle_mouvement}</td><td><b>${c.type_mouvement}</b></td><td style="color:#d97706;font-weight:bold;">${Number(c.montant).toLocaleString()} ${c.devise}</td><td>${c.cree_par||'-'}</td><td class="${hideCS}"><button onclick="supprimerLigne('caisses_couches_sociales', ${c.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="7">Aucune cotisation enregistrée</td></tr>';
 
-                // 5. REMPLISSAGE DES COMPTES CENTRAUX ET PATRIMOINE
+                               // 5. REMPLISSAGE DES COMPTES CENTRAUX ET PATRIMOINE
                 let idxM=1; document.getElementById('table-membres-body').innerHTML = r3.data.map(m => `<tr><td>${idxM++}</td><td><b>${m.nom_postnom}</b></td><td><span style="color:#059669;">${m.baptise}</span></td><td>${m.etat_civil||'-'}</td><td>${m.adresse||'-'}</td><td style="color:var(--primary);">${m.contact||'-'}</td><td>${m.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('membres', ${m.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun fidèle enregistré</td></tr>';
                 let idxB=1; document.getElementById('table-biens-body').innerHTML = r4.data.map(b => `<tr><td>${idxB++}</td><td><b>${b.designation}</b></td><td><b>${b.quantite}</b></td><td>${b.etat}</td><td style="color:#d97706;">${b.statut_bien||'En action'}</td><td><i>📍 ${b.emplacement_bien||'-'}</i></td><td>${b.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('biens', ${b.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun bien matériel répertorié</td></tr>';
                 let idxD=1; document.getElementById('table-documents-body').innerHTML = r5.data.map(d => `<tr><td>${idxD++}</td><td style="color:#c084fc;"><b>${d.titre_document}</b></td><td>${d.categorie||'-'}</td><td><i>📍 ${d.lieu_conservation}</i></td><td>${d.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('documents_sacres', ${d.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="6">Aucun document consigné</td></tr>';
                 let idxP=1; document.getElementById('table-projets-body').innerHTML = r6.data.map(p => `<tr><td>${idxP++}</td><td><b>${p.nom_projet}</b></td><td style="color:var(--primary);">${Number(p.budget_estime_cdf).toLocaleString()} CDF</td><td>${p.responsable||'-'}</td><td><b>${p.statut}</b></td><td>${p.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('projets', ${p.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="7">Aucun projet enregistré</td></tr>';
-                document.getElementById('table-programmes-body').innerHTML = fProgrammes.map(pr => `<tr><td>${pr.date_culte}</td><td><b>Thème : ${pr.theme}</b></td><td>${pr.predicateur||'-'}</td><td>${pr.moderateur||'-'}</td><td>👨${pr.nb_hommes} | 👩${pr.nb_femmes} | 👧${pr.nb_enfants} | 👥${pr.nb_visiteurs||0}</td><td style="font-weight:bold;color:#0d9488;background:#f0fdfa;text-align:center;">${(Number(pr.nb_hommes)+Number(pr.nb_femmes)+Number(pr.nb_enfants)+Number(pr.nb_visiteurs||0)).toLocaleString()} Total</td><td>${pr.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('programmes_cultes', ${pr.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucune activité enregistrée</td></tr>';
+                document.getElementById('table-programmes-body').innerHTML = fProgrammes.map(pr => `<tr><td>${pr.date_culte}</td><td><b>Thème : ${pr.theme}</b></td><td>${pr.predicateur||'-'}</td><td>${pr.moderateur||'-'}</td><td>👨${pr.nb_hommes} | 👩${pr.nb_femmes} | 👧${pr.nb_enfants} | 👥${pr.nb_visiteurs||0}</td><td style="font-weight:bold;color:#0d9488;background:#f0fdfa;text-align:center;">${(Number(pr.nb_hommes)+Number(pr.nb_femmes)+Number(pr.nb_enfants)+Number(pr.nb_visiteurs||0)).toLocaleString()} Total</td><td>${pr.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('programmes_cultes', ${pr.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun culte enregistré</td></tr>';
 
+                // 6. GESTION ADMINISTRATIVE DU RÉPERTOIRE SOCIAL (CORRIGÉ ICI POUR ADAPTATION ÉCRAN)
+                const hideSoc = estComite || estSocial ? "" : "hidden";
+                let idxS=1; 
+                if (document.getElementById('table-social-body')) {
+                    document.getElementById('table-social-body').innerHTML = r8.data.map(s => `<tr><td>${idxS++}</td><td><b>${s.nom_complet}</b></td><td><span style="color:#a855f7;">${s.categorie}</span></td><td>${s.adresse||'-'}</td><td>${s.contact_tuteur||'-'}</td><td>${s.assistance_accordee||'-'}</td><td>${s.cree_par||'-'}</td><td class="${hideSoc}"><button onclick="supprimerLigne('assistance_sociale', ${s.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun dossier social enregistré</td></tr>';
+                }
                 const hideSoc = estComite || estSocial ? "" : "hidden";
                 let idxS=1; document.getElementById('table-social-body').innerHTML = r8.data.map(s => `<tr><td><b>${s.nom_complet}</b></td><td><span style="color:#a855f7;">${s.categorie}</span></td><td>${s.adresse||'-'}</td><td>${s.contact_tuteur||'-'}</td><td>${s.assistance_accordee||'-'}</td><td>${s.cree_par||'-'}</td><td class="${hideSoc}"><button onclick="supprimerLigne('assistance_sociale', ${s.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun dossier social enregistré</td></tr>';
             }); }); }); }); }); }); }); }); }); }); });
         }
+        // 🔒 SAUVEGARDE DES PARAMÈTRES DU PRÉSIDENT DANS LE CLOUD SUPABASE
+        function sauvegarderParametresPresident() {
+            if (!sessionUtilisateur || sessionUtilisateur.echelon !== "Comité") return;
+            const up = {
+                taux_change: Number(document.getElementById('cfg_taux').value) || 2850,
+                seuil_securite_cdf: Number(document.getElementById('cfg_seuil').value) || 200000,
+                mois_verrouille: document.getElementById('cfg_verrou').value
+            };
+            supabaseClient.from('config_eglise').insert([{ id: 1, ...up }]).then(() => {
+                chargerDonneesTableaux();
+            });
+        }
 
+        // CHARGEMENT INITIAL DES PARAMÈTRES PRÉSIDENTIELS AU DÉMARRAGE DU MENU
+        function chargerParametresPresident() {
+            supabaseClient.from('config_eglise').select().then(res => {
+                if (res.data && res.data.length > 0) {
+                    const c = res.data[0];
+                    document.getElementById('cfg_taux').value = c.taux_change;
+                    document.getElementById('cfg_seuil').value = c.seuil_securite_cdf;
+                    document.getElementById('cfg_verrou').value = c.mois_verrouille;
+                }
+            });
+        }
+
+        // AMÉLIORATION DE LA PROTECTION DES COUPE-FEUX (À LEVER DANS VOTRE CODE EXISTANT)
+        // Avant chaque suppression ou modification, l'application vérifie cette règle :
+        function verifierSiMoisEstVerrouille(dateString) {
+            const moisSaisie = dateString.substring(0, 7); // Extrait 'YYYY-MM'
+            const moisBloque = document.getElementById('cfg_verrou').value;
+            if (moisBloque !== "Aucun" && moisSaisie === moisBloque) {
+                alert("❌ Opération Refusée ! Le Président a officiellement clôturé et verrouillé les écritures comptables de ce mois.");
+                return true;
+            }
+            return false;
+        }
         // AMBIANCE INITIALE DU SYSTEME DE COULEURS ET DECONNEXION
         function deconnexion() { localStorage.removeItem("eglise-session-courte"); sessionUtilisateur = null; document.getElementById('section-connexion').className = "card-box"; document.getElementById('section-connexion').classList.remove('hidden'); document.getElementById('section-dashboard').classList.add('hidden'); document.body.style.display = "flex"; }
         
