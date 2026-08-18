@@ -501,7 +501,13 @@
             if (echelon === "Couche Sociale") {
                 document.querySelectorAll('.menu-general, .menu-social-seul').forEach(b => b.classList.add('hidden'));
                 if(document.getElementById('zone-caisses-visibles')) document.getElementById('zone-caisses-visibles').classList.add('hidden');
-                if(document.getElementById('zone-caisses-leader-restreint')) document.getElementById('zone-caisses-leader-restreint').classList.remove('hidden');
+                
+                // FORCE L'AFFICHAGE DU TABLEAU DE BORD ORANGE DE VOTRE DÉPARTEMENT
+                const cLeader = document.getElementById('zone-caisses-leader-restreint');
+                if(cLeader) {
+                    cLeader.classList.remove('hidden');
+                    cLeader.style.display = "block"; // <-- CETTE LIGNE AJOUTÉE FORCE L'OUVERTURE SUR SMARTPHONE
+                }
                 
                 const deptPrecise = sessionUtilisateur.departement_precise || "Général";
                 if(document.getElementById('label-couche-active')) document.getElementById('label-couche-active').innerText = idCompte + " | Département : " + deptPrecise + " 👥";
