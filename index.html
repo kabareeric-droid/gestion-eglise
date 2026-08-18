@@ -728,12 +728,12 @@
                     if(document.getElementById('table-couches-activites-body')) document.getElementById('table-couches-activites-body').innerHTML = aCouches.map(a => `<tr><td>${a.date_activite}</td><td>${a.couche_sociale}</td><td><b>${a.libelle_activite}</b></td><td style="color:#0d9488;font-weight:bold;">${a.nb_presents} Présents</td><td>${a.cree_par||'-'}</td><td class="${hideCS}"><button onclick="supprimerLigne('activites_couches_sociales', ${a.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="6">Aucune activité</td></tr>';
                     if(document.getElementById('table-couches-caisse-body')) document.getElementById('table-couches-caisse-body').innerHTML = cCouches.map(c => `<tr><td>${c.date_mouvement}</td><td>${c.couche_sociale}</td><td>${c.libelle_mouvement}</td><td><b>${c.type_mouvement}</b></td><td style="color:#d97706;font-weight:bold;">${Number(c.montant).toLocaleString()} ${c.devise}</td><td>${c.cree_par||'-'}</td><td class="${hideCS}"><button onclick="supprimerLigne('caisses_couches_sociales', ${c.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="7">Aucune cotisation</td></tr>';
                 } catch(e){}
-                                // NOUVEAU : CALCUL DE LA CAISSE EXCLUSIVE DU LEADER CONNECTÉ
+                                              // NOUVEAU : CALCUL DE LA CAISSE EXCLUSIVE ET AFFICHAGE FORCÉ DE LA BOÎTE ORANGE
                 try {
                     let lRecCDF = 0, lRecUSD = 0, lDepCDF = 0, lDepUSD = 0;
                     let nbRec = 0, nbDep = 0;
 
-                    // On passe au peigne fin uniquement les cotisations de son groupe (cCouches contient déjà le filtre du groupe)
+                    // Filtrage et sommation des cotisations de sa couche sociale
                     cCouches.forEach(mov => {
                         const mt = Number(mov.montant) || 0;
                         const d = mov.devise || 'CDF';
@@ -746,11 +746,18 @@
                         }
                     });
 
-                    // Calcul du reste net en caisse pour le groupe
                     let lSoldeCDF = lRecCDF - lDepCDF;
                     let lSoldeUSD = lRecUSD - lDepUSD;
 
-                    // Injection sécurisée dans son mini Tableau de Bord
+                    // Si l'utilisateur est un leader, on force l'affichage de son bloc orange
+                    if (sessionUtilisateur.echelon === "Couche Sociale") {
+                        const boxOrange = document.getElementById('zone-caisses-leader-restreint');
+                        if (boxOrange) {
+                            boxOrange.style.display = "flex"; // <-- FORÇAGE DE L'AFFICHAGE DE LA BOÎTE ORANGE
+                        }
+                    }
+
+                    // Injection des montants dans ses compteurs de groupe
                     if(document.getElementById('stat-leader-solde-cdf')) document.getElementById('stat-leader-solde-cdf').innerText = lSoldeCDF.toLocaleString() + " CDF";
                     if(document.getElementById('stat-leader-solde-usd')) document.getElementById('stat-leader-solde-usd').innerText = lSoldeUSD.toFixed(2) + " USD";
                     if(document.getElementById('stat-leader-rec-total')) document.getElementById('stat-leader-rec-total').innerText = `+ ${lRecCDF.toLocaleString()} CDF | + ${lRecUSD.toFixed(2)} USD (${nbRec})`;
