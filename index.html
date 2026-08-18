@@ -571,11 +571,35 @@
             });
         }
 
+                // EXTRACTEUR ET ENREGISTREMENT COMPLET DES COMPTES ÉCHELONS AVEC LEUR SOUS-MENU
         if(document.getElementById('form-creer-utilisateur')) {
             document.getElementById('form-creer-utilisateur').addEventListener('submit', function(e) {
                 e.preventDefault();
-                const r = { identifiant: document.getElementById('new_username').value.trim().toUpperCase(), mot_de_passe: document.getElementById('new_password').value.trim(), echelon: document.getElementById('new_echelon').value, nom_personne: "Échelon " + document.getElementById('new_username').value };
-                supabaseClient.from('utilisateurs_eglise').insert([r]).then(() => { document.getElementById('form-creer-utilisateur').reset(); chargerUtilisateursDansMenu(); });
+                
+                const idForm = document.getElementById('new_username').value.trim().toUpperCase();
+                const passForm = document.getElementById('new_password').value.trim();
+                const echForm = document.getElementById('new_echelon').value;
+                const deptForm = document.getElementById('new_sub_dept').value;
+
+                const rowUser = { 
+                    identifiant: idForm, 
+                    mot_de_passe: passForm, 
+                    echelon: echForm, 
+                    departement_precise: deptForm, 
+                    nom_personne: "Échelon " + idForm 
+                };
+
+                supabaseClient.from('utilisateurs_eglise').insert([rowUser]).then(res => {
+                    if (res.error) {
+                        alert("Erreur lors de la création de l'échelon : " + res.error.message);
+                    } else {
+                        document.getElementById('form-creer-utilisateur').reset();
+                        if(document.getElementById('new_sub_dept')) {
+                            document.getElementById('new_sub_dept').classList.add('hidden');
+                        }
+                        chargerUtilisateursDansMenu();
+                    }
+                });
             });
         }
 
