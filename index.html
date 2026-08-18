@@ -515,15 +515,24 @@
                     document.getElementById('label-couche-active').innerText = idCompte + " | Département : " + deptPrecise + " 👥";
                 }
                 
-                // Blocage chirurgical des 3 menus déroulants de l'écran sur son groupe exclusif
+                               // Récupération de son département précis stocké en base de données
+                const deptPrecise = sessionUtilisateur.departement_precise || "Général";
+                if(document.getElementById('label-couche-active')) {
+                    document.getElementById('label-couche-active').innerText = idCompte + " | Département : " + deptPrecise + " 👥";
+                }
+                
+                // Blocage chirurgical insensible à la casse et aux espaces
                 ['cm_groupe', 'ca_groupe', 'cc_groupe'].forEach(selectId => {
                     const drop = document.getElementById(selectId);
                     if (drop) {
                         for (let i = 0; i < drop.options.length; i++) {
-                            if (drop.options[i].value === deptPrecise) { drop.selectedIndex = i; break; }
+                            if (drop.options[i].value.trim().toLowerCase() === deptPrecise.trim().toLowerCase()) { 
+                                drop.selectedIndex = i; 
+                                break; 
+                            }
                         }
-                        drop.style.pointerEvents = "none"; // Interdiction stricte de cliquer ou tricher
-                        drop.style.background = "#cbd5e1"; // Devient gris pour spécifier le verrouillage
+                        drop.style.pointerEvents = "none"; // Interdiction stricte de tricher
+                        drop.style.background = "#cbd5e1"; // Devient gris verrouillé
                     }
                 });
                 
