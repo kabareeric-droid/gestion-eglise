@@ -515,12 +515,6 @@
                     document.getElementById('label-couche-active').innerText = idCompte + " | Département : " + deptPrecise + " 👥";
                 }
                 
-                               // Récupération de son département précis stocké en base de données
-                const deptPrecise = sessionUtilisateur.departement_precise || "Général";
-                if(document.getElementById('label-couche-active')) {
-                    document.getElementById('label-couche-active').innerText = idCompte + " | Département : " + deptPrecise + " 👥";
-                }
-                
                 // Blocage chirurgical insensible à la casse et aux espaces
                 ['cm_groupe', 'ca_groupe', 'cc_groupe'].forEach(selectId => {
                     const drop = document.getElementById(selectId);
