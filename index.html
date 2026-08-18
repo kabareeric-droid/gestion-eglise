@@ -607,12 +607,27 @@
                 let soldeDevCDF = recDevCDF - depDevCDF; let soldeDevUSD = recDevUSD - depDevUSD;
 
                 try {
-                    if (document.getElementById('stat-caisse-fonc')) document.getElementById('stat-caisse-fonc').innerHTML = `${soldeFoncCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#2563eb;font-weight:900;">${soldeFoncUSD.toFixed(2)} USD</span>`;
-                    if (document.getElementById('stat-caisse-dev')) document.getElementById('stat-caisse-dev').innerHTML = `${soldeDevCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#8b5cf6;font-weight:900;">${soldeDevUSD.toFixed(2)} USD</span>`;
-                    if (document.getElementById('stat-entrees')) document.getElementById('stat-entrees').innerHTML = `${(recFoncCDF+recDevCDF).toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#10b981;font-weight:900;"> ${(recFoncUSD+recDevUSD).toFixed(2)} USD</span>`;
-                    if (document.getElementById('stat-depenses')) document.getElementById('stat-depenses').innerHTML = `${(depFoncCDF+depDevCDF).toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#ef4444;font-weight:900;"> ${(depFoncUSD+depDevUSD).toFixed(2)} USD</span>`;
-                } catch(e){}
-                try {
+                                   // Injection sécurisée avec vérification d'existence (Anti-Erreur null)
+                const cFonc = document.getElementById('stat-caisse-fonc'); 
+                if (cFonc && sessionUtilisateur.echelon !== "Couche Sociale") {
+                    cFonc.innerHTML = `${soldeFoncCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#2563eb;font-weight:900;">${soldeFoncUSD.toFixed(2)} USD</span>`;
+                }
+                
+                const cDev = document.getElementById('stat-caisse-dev'); 
+                if (cDev && sessionUtilisateur.echelon !== "Couche Sociale") {
+                    cDev.innerHTML = `${soldeDevCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#8b5cf6;font-weight:900;">${soldeDevUSD.toFixed(2)} USD</span>`;
+                }
+                
+                const cRec = document.getElementById('stat-entrees'); 
+                if (cRec && sessionUtilisateur.echelon !== "Couche Sociale") {
+                    cRec.innerHTML = `${totalRecCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#10b981;font-weight:900;">${totalRecUSD.toFixed(2)} USD</span>`;
+                }
+                
+                const cDep = document.getElementById('stat-depenses'); 
+                if (cDep && sessionUtilisateur.echelon !== "Couche Sociale") {
+                    cDep.innerHTML = `${totalDepCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#ef4444;font-weight:900;">${totalDepUSD.toFixed(2)} USD</span>`;
+                }
+
                     if (document.getElementById('ana-ent-fonc-cdf')) {
                         document.getElementById('ana-ent-fonc-cdf').innerText = recFoncCDF.toLocaleString() + " CDF";
                         document.getElementById('ana-ent-fonc-usd').innerText = recFoncUSD.toFixed(2) + " USD";
