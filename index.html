@@ -476,14 +476,14 @@
             });
         });
 
-        // 🛡️ APPLICATION DE L'ÉTANCHÉITÉ STRICTE DES ÉCHELONS
+              // 🛡️ APPLICATION DE L'ÉTANCHÉITÉ STRICTE DES ÉCHELONS (CORRIGÉE)
         function appliquerDroitsEchelonsEtDemarrer() {
             if (!sessionUtilisateur) return;
 
-            // Masquage forcé immédiat du panneau présidentiel au démarrage pour réinitialiser la sécurité
-            if(document.getElementById('panel-controle-president')) {
-                document.getElementById('panel-controle-president').classList.add('hidden');
-            }
+            // Masquage forcé immédiat de tous les panneaux spécifiques pour nettoyer l'écran
+            if(document.getElementById('panel-controle-president')) document.getElementById('panel-controle-president').classList.add('hidden');
+            if(document.getElementById('zone-caisses-leader-restreint')) document.getElementById('zone-caisses-leader-restreint').classList.add('hidden');
+            if(document.getElementById('zone-caisses-visibles')) document.getElementById('zone-caisses-visibles').classList.remove('hidden');
 
             document.getElementById('section-connexion').classList.add('hidden');
             document.getElementById('section-dashboard').classList.remove('hidden');
@@ -495,74 +495,56 @@
             if(document.getElementById('user-role')) document.getElementById('user-role').innerText = echelon;
 
             document.querySelectorAll('.onglet-btn').forEach(b => b.classList.remove('hidden'));
-            if(document.getElementById('zone-caisses-visibles')) document.getElementById('zone-caisses-visibles').classList.remove('hidden');
             if(document.getElementById('btn-menu-admin')) document.getElementById('btn-menu-admin').classList.add('hidden');
 
-                        // --- CAS 1 : LE LEADER DE COUCHE SOCIALE (VUE SÉCURISÉE ET FINANCES DÉDIÉES) ---
+            // --- CAS 1 : LE LEADER DE COUCHE SOCIALE ---
             if (echelon === "Couche Sociale") {
-                // Masquage absolu des onglets généraux et de la caisse centrale de l'église
                 document.querySelectorAll('.menu-general, .menu-social-seul').forEach(b => b.classList.add('hidden'));
                 if(document.getElementById('zone-caisses-visibles')) document.getElementById('zone-caisses-visibles').classList.add('hidden');
+                if(document.getElementById('zone-caisses-leader-restreint')) document.getElementById('zone-caisses-leader-restreint').classList.remove('hidden');
                 
-                // Activation visuelle de sa propre caisse de département miniature
-                if(document.getElementById('zone-caisses-leader-restreint')) {
-                    document.getElementById('zone-caisses-leader-restreint').classList.remove('hidden');
-                }
-
-                // Récupération de son département précis stocké en base de données
                 const deptPrecise = sessionUtilisateur.departement_precise || "Général";
-                if(document.getElementById('label-couche-active')) {
-                    document.getElementById('label-couche-active').innerText = idCompte + " | Département : " + deptPrecise + " 👥";
-                }
+                if(document.getElementById('label-couche-active')) document.getElementById('label-couche-active').innerText = idCompte + " | Département : " + deptPrecise + " 👥";
                 
-                // Blocage chirurgical insensible à la casse et aux espaces
                 ['cm_groupe', 'ca_groupe', 'cc_groupe'].forEach(selectId => {
                     const drop = document.getElementById(selectId);
                     if (drop) {
                         for (let i = 0; i < drop.options.length; i++) {
-                            if (drop.options[i].value.trim().toLowerCase() === deptPrecise.trim().toLowerCase()) { 
-                                drop.selectedIndex = i; 
-                                break; 
-                            }
+                            if (drop.options[i].value.trim().toLowerCase() === deptPrecise.trim().toLowerCase()) { drop.selectedIndex = i; break; }
                         }
-                        drop.style.pointerEvents = "none"; // Interdiction stricte de tricher
-                        drop.style.background = "#cbd5e1"; // Devient gris verrouillé
+                        drop.style.pointerEvents = "none"; drop.style.background = "#cbd5e1";
                     }
                 });
-                
                 document.querySelectorAll('.zone-couches-saisie').forEach(f => f.classList.remove('hidden'));
                 changerOnglet('tab-couches');
 
-            // --- CAS 2 : LA GESTION SOCIALE DETACHÉE ---
+            // --- CAS 2 : LA GESTION SOCIALE ---
             } else if (echelon === "Social") {
                 document.querySelectorAll('.menu-general, .menu-couches-seul').forEach(b => b.classList.add('hidden'));
                 if(document.getElementById('zone-caisses-visibles')) document.getElementById('zone-caisses-visibles').classList.add('hidden');
                 document.querySelectorAll('.zone-social-saisie').forEach(f => f.classList.remove('hidden'));
                 changerOnglet('tab-social');
 
-            // --- CAS 3 : LE PASTEUR / SERVITEUR (LECTURE SEULE GLOBAL) ---
+            // --- CAS 3 : LE PASTEUR / SERVITEUR ---
             } else if (echelon === "Serviteur") {
                 if(document.getElementById('label-couche-active')) document.getElementById('label-couche-active').innerText = "Toutes (Lecture Seule 🔎)";
                 document.querySelectorAll('.form-saisie, .btn-act, .zone-comite, .zone-social-saisie, .zone-couches-saisie').forEach(el => el.classList.add('hidden'));
                 changerOnglet('tab-entrees');
 
-            // --- CAS 4 : LE PRÉSIDENT / COMITÉ (ACCÈS ENTRALE ABSOLU) ---
+            // --- CAS 4 : LE PRÉSIDENT / COMITÉ ---
             } else if (echelon === "Comité") {
                 if(document.getElementById('label-couche-active')) document.getElementById('label-couche-active').innerText = "Toutes (Vue Président 👑)";
                 if(document.getElementById('btn-menu-admin')) document.getElementById('btn-menu-admin').classList.remove('hidden');
                 document.querySelectorAll('.form-saisie, .zone-comite, .zone-social-saisie, .zone-couches-saisie').forEach(el => el.classList.remove('hidden'));
                 ['cm_groupe', 'ca_groupe', 'cc_groupe'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) { el.style.pointerEvents = "auto"; el.style.background = "#ffffff"; }
+                    const el = document.getElementById(id); if (el) { el.style.pointerEvents = "auto"; el.style.background = "#ffffff"; }
                 });
                 changerOnglet('tab-entrees');
             }
 
             document.getElementById('date-debut').value = "2026-08-01";
             document.getElementById('date-fin').value = "2026-08-18";
-            
-            chargerParametresPresident();
-            chargerDonneesTableaux();
+            chargerParametresPresident(); chargerDonneesTableaux();
         }
 
         // NAVIGATION COMMUTATRICE DES ONGLES
