@@ -238,33 +238,28 @@
                     <div id="stat-depenses" style="margin:2px 0 0 0; font-size:0.95rem; font-weight:900; color:#dc2626;">0 CDF<br><span style="font-size:0.85rem;color:#ef4444;font-weight:900;">0.00 USD</span></div>
                 </div>
             </div>
-        <!-- TABLEAU DE BORD FINANCIER EXCLUSIF POUR LE LEADER DE COUCHE SOCIALE -->
-        <div id="zone-caisses-leader-restreint" class="card-box hidden" style="background: var(--bg-card); padding: 0.6rem; margin-bottom: 0.5rem; border: 2px solid #d97706; display: flex; flex-direction: column; gap: 0.5rem;">
-            <p style="margin: 0; font-size: 0.85rem; font-weight: 900; color: #d97706; text-align: center;">📊 TABLEAU DE BORD FINANCIER DE VOTRE DÉPARTEMENT</p>
+         <!-- 🔸 2. NOUVEAU : TABLEAU DE BORD FINANCIER REPARE EXCLUSIF POUR LE LEADER CONNECTÉ -->
+        <div id="zone-caisses-leader-restreint" style="background: var(--bg-card); padding: 0.6rem; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 0.5rem; border: 2px solid #d97706; display: none; flex-direction: column; gap: 0.5rem;">
+            <p style="margin: 0; font-size: 0.85rem; font-weight: 900; color: #d97706; text-align: center;">📊 CAISSE INTERNE ET DISPONIBILITÉ DE VOTRE DÉPARTEMENT</p>
             <div class="grid grid-4" style="gap: 0.4rem;">
-                <!-- Solde Interne CDF -->
                 <div class="card-stat" style="border-left-color: #d97706; background: #fffbeb; padding: 0.45rem;">
                     <p style="margin:0; font-size:0.65rem; color:#b45309; font-weight:800;">💰 SOLDE DISPONIBLE (CDF)</p>
                     <p id="stat-leader-solde-cdf" style="margin:2px 0 0 0; font-size:1.1rem; font-weight:900; color:#b45309;">0 CDF</p>
                 </div>
-                <!-- Solde Interne USD -->
                 <div class="card-stat" style="border-left-color: #3b82f6; background: #eff6ff; padding: 0.45rem;">
                     <p style="margin:0; font-size:0.65rem; color:#1e40af; font-weight:800;">💵 SOLDE DISPONIBLE (USD)</p>
                     <p id="stat-leader-solde-usd" style="margin:2px 0 0 0; font-size:1.1rem; font-weight:900; color:#1e3a8a;">0.00 USD</p>
                 </div>
-                <!-- Total Cotisations Recues -->
                 <div class="card-stat" style="border-left-color: #10b981; background: #f0fdf4; padding: 0.45rem;">
                     <p style="margin:0; font-size:0.65rem; color:#065f46; font-weight:800;">📥 TOTAL COTISATIONS REÇUES</p>
-                    <p id="stat-leader-rec-total" style="margin:2px 0 0 0; font-size:0.9rem; font-weight:800; color:#059669;">0 Mouvements</p>
+                    <p id="stat-leader-rec-total" style="margin:2px 0 0 0; font-size:0.85rem; font-weight:800; color:#059669;">0 CDF | 0.00 USD</p>
                 </div>
-                <!-- Total Sorties Interne -->
                 <div class="card-stat" style="border-left-color: #ef4444; background: #fef2f2; padding: 0.45rem;">
                     <p style="margin:0; font-size:0.65rem; color:#991b1b; font-weight:800;">📤 TOTAL SORTIES EFFECTUÉES</p>
-                    <p id="stat-leader-dep-total" style="margin:2px 0 0 0; font-size:0.9rem; font-weight:800; color:#dc2626;">0 Mouvements</p>
+                    <p id="stat-leader-dep-total" style="margin:2px 0 0 0; font-size:0.85rem; font-weight:800; color:#dc2626;">0 CDF | 0.00 USD</p>
                 </div>
             </div>
         </div>
-
             <!-- LE FILTRE CALENDRIER SE LOGE JUSTE EN DESSOUS -->
             <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; font-size: 0.85rem; padding-top: 0.4rem; border-top: 1px dashed var(--border-color);">
                 <span style="font-weight: 800; color: #475569;">📅 Analyser la Période :</span>
