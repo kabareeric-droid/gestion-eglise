@@ -403,15 +403,16 @@
         </div>
     </div>
     <script>
+           <script>
         // CONFIGURATION SECURISEE DIRECTE SUPABASE
-        const SUPABASE_URL = "https://xgibabbmmhflhjocvykr.supabase.co"; 
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnaWJhYmJtbWhmbGhqb2N2eWtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MTk3OTgsImV4cCI6MjEwMjM5NTc5OH0.WuXLVe7slbu3eS96SEbFLzh4nYmuiYr8pGuRlI8K8rc"; 
+        const SUPABASE_URL = "https://supabase.co"; 
+        const SUPABASE_ANON_KEY = "VOTRE_SUPABASE_ANON_KEY"; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let sessionUtilisateur = null;
         let tempsInactivite = 0;
 
-        // CONNEXION PAR IDENTIFIANT COURT
+        // FORMULAIRE DE CONNEXION PAR IDENTIFIANT COURT
         document.getElementById('form-connexion').addEventListener('submit', async (e) => {
             e.preventDefault();
             const idSaisi = document.getElementById('identifiant_court').value.trim().toUpperCase();
@@ -423,14 +424,15 @@
                 if (utilisateur) {
                     sessionUtilisateur = utilisateur;
                     localStorage.setItem("eglise-session-courte", JSON.stringify(utilisateur));
+                    document.getElementById('form-connexion').reset();
                     appliquerDroitsEchelonsEtDemarrer();
                 } else {
-                    alert("⚠️ Code incorrect. Veuillez vérifier auprès du Président.");
+                    alert("⚠️ Identifiant ou code incorrect. Vérifiez auprès du Président.");
                 }
             });
         });
 
-        // FILTRAGE ET ÉTANCHÉITÉ COMPLÈTE DES ACCÈS
+        // 🛡️ BRANCHEMENT ET ÉTANCHÉITÉ DES DROITS PAR ÉCHELON
         function appliquerDroitsEchelonsEtDemarrer() {
             if (!sessionUtilisateur) return;
 
@@ -447,57 +449,67 @@
             document.getElementById('zone-caisses-visibles').classList.remove('hidden');
             document.getElementById('btn-menu-admin').classList.add('hidden');
 
-            // Échelon Restreint : Chef de groupe (Mamans, Jeunes, Papas) -> Masquage Central
+            // --- CAS A : LE LEADER DE COUCHE SOCIALE ---
             if (echelon === "Couche Sociale") {
                 document.querySelectorAll('.menu-general, .menu-social-seul').forEach(b => b.classList.add('hidden'));
                 document.getElementById('zone-caisses-visibles').classList.add('hidden');
-                document.getElementById('label-couche-active').innerText = idCompte + " (Accès Unique Dédié)";
+                document.getElementById('label-couche-active').innerText = idCompte + " (Accès Dédié 👥)";
                 
                 ['cm_groupe', 'ca_groupe', 'cc_groupe'].forEach(selectId => {
                     const drop = document.getElementById(selectId);
-                    for (let i = 0; i < drop.options.length; i++) {
-                        if (drop.options[i].value.toUpperCase().includes(idCompte)) { drop.selectedIndex = i; break; }
+                    if (drop) {
+                        for (let i = 0; i < drop.options.length; i++) {
+                            if (drop.options[i].value.toUpperCase().includes(idCompte)) { drop.selectedIndex = i; break; }
+                        }
+                        drop.style.pointerEvents = "none"; drop.style.background = "#e2e8f0";
                     }
-                    drop.style.pointerEvents = "none"; drop.style.background = "#e2e8f0";
                 });
                 document.querySelectorAll('.zone-couches-saisie').forEach(f => f.classList.remove('hidden'));
                 changerOnglet('tab-couches');
-
+            // --- CAS B : LA GESTION SOCIALE ---
             } else if (echelon === "Social") {
                 document.querySelectorAll('.menu-general, .menu-couches-seul').forEach(b => b.classList.add('hidden'));
                 document.getElementById('zone-caisses-visibles').classList.add('hidden');
                 document.querySelectorAll('.zone-social-saisie').forEach(f => f.classList.remove('hidden'));
                 changerOnglet('tab-social');
 
+            // --- CAS C : LE PASTEUR / SERVITEUR (LECTURE SEULE) ---
             } else if (echelon === "Serviteur") {
-                document.getElementById('label-couche-active').innerText = "Toutes (Lecture Seule 🔎)";
+                document.getElementById('label-couche-active').innerText = "Toutes les couches (Lecture Seule 🔎)";
                 document.querySelectorAll('.form-saisie, .btn-act, .zone-comite, .zone-social-saisie, .zone-couches-saisie').forEach(el => el.classList.add('hidden'));
                 changerOnglet('tab-entrees');
 
+            // --- CAS D : LE PRÉSIDENT / COMITÉ (ACCÈS COMPLET) ---
             } else if (echelon === "Comité") {
-                document.getElementById('label-couche-active').innerText = "Toutes (Vue Président 👑)";
+                document.getElementById('label-couche-active').innerText = "Toutes les Couches (Vue Président 👑)";
                 document.getElementById('btn-menu-admin').classList.remove('hidden');
                 document.querySelectorAll('.form-saisie, .zone-comite, .zone-social-saisie, .zone-couches-saisie').forEach(el => el.classList.remove('hidden'));
                 ['cm_groupe', 'ca_groupe', 'cc_groupe'].forEach(id => {
-                    document.getElementById(id).style.pointerEvents = "auto"; document.getElementById(id).style.background = "#ffffff";
+                    const el = document.getElementById(id);
+                    if (el) { el.style.pointerEvents = "auto"; el.style.background = "#ffffff"; }
                 });
                 changerOnglet('tab-entrees');
             }
 
-            // Correction de la date par défaut : On élargit du 01 août au 18 août 2026 pour ramener immédiatement vos anciennes données !
             document.getElementById('date-debut').value = "2026-08-01";
             document.getElementById('date-fin').value = "2026-08-18";
+            
+            chargerParametresPresident();
             chargerDonneesTableaux();
         }
 
+        // NAVIGATION COMMUTATEUR D'ONGLETS
         function changerOnglet(tabId) {
             document.querySelectorAll('.onglet-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(tabId).classList.remove('hidden');
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) targetTab.classList.remove('hidden');
+            
             document.querySelectorAll('.onglet-btn').forEach(btn => btn.classList.remove('actif'));
-            if (document.getElementById('btn-' + tabId)) document.getElementById('btn-' + tabId).classList.add('actif');
+            const targetBtn = document.getElementById('btn-' + tabId);
+            if (targetBtn) targetBtn.classList.add('actif');
         }
 
-        // MENU SECRET : THÈMES ET ACTIONS PRÉSIDENTIELLES
+        // MENU SECRET ⚙️ (OUVERTURE, FERMETURE ET LES 10 THÈMES)
         function ouvrirMenuControle() { document.getElementById('panel-controle-president').classList.remove('hidden'); chargerUtilisateursDansMenu(); }
         function fermerMenuControle() { document.getElementById('panel-controle-president').classList.add('hidden'); }
         function changerThemeApplication(nomTheme) { document.body.className = ""; document.body.classList.add(nomTheme); localStorage.setItem("eglise-theme-actif", nomTheme); }
@@ -507,7 +519,7 @@
             supabaseClient.from('utilisateurs_eglise').select().then(res => {
                 if (res.data) {
                     document.getElementById('table-utilisateurs-body').innerHTML = res.data.map(u => {
-                        const bSuppr = u.identifiant === "PRESIDENT" ? `<i>Protégé</i>` : `<button onclick="supprimerUtilisateur(${u.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button>`;
+                        const bSuppr = u.identifiant === "PRESIDENT" ? `<i>Protégé</i>` : `<button onclick="supprimerUtilisateur(${u.id})" class="btn-act" style="background:#dc2626;padding:3px 6px;">🗑️ Retirer</button>`;
                         return `<tr><td><b>${u.identifiant}</b></td><td><code>${u.mot_de_passe}</code></td><td><b>${u.echelon}</b></td><td>${bSuppr}</td></tr>`;
                     }).join('');
                 }
@@ -521,26 +533,47 @@
         });
 
         function supprimerUtilisateur(id) { if (confirm("Retirer cet accès ?")) { supabaseClient.from('utilisateurs_eglise').delete().eq('id', id).then(() => chargerUtilisateursDansMenu()); } }
+        // 🔒 CONFIGURATION DE GOUVERNANCE PRÉSIDENTIELLE (TAUX, VERROUS ET SEUILS)
+        function sauvegarderParametresPresident() {
+            if (!sessionUtilisateur || sessionUtilisateur.echelon !== "Comité") return;
+            const up = { taux_change: Number(document.getElementById('cfg_taux').value) || 2850, seuil_securite_cdf: Number(document.getElementById('cfg_seuil').value) || 200000, mois_verrouille: document.getElementById('cfg_verrou').value };
+            supabaseClient.from('config_eglise').insert([{ id: 1, ...up }]).then(() => { chargerDonneesTableaux(); });
+        }
 
-        // VERROUILLAGE SÉCURITÉ DE 10 MINUTES
-        function resetTimer() { tempsInactivite = 0; }
-        document.onmousemove = resetTimer; document.onkeypress = resetTimer; document.ontouchstart = resetTimer;
-        setInterval(function() { if (sessionUtilisateur) { tempsInactivite++; if (tempsInactivite >= 600) { alert("⏱️ Session déconnectée après 10 min d'inactivité."); deconnexion(); } } }, 1000);
-        // ENREGISTREMENTS DES DONNÉES AVEC TRAÇABILITÉ ABSOLUE
+        function chargerParametresPresident() {
+            supabaseClient.from('config_eglise').select().then(res => {
+                if (res.data && res.data.length > 0) {
+                    const c = res.data[0];
+                    document.getElementById('cfg_taux').value = c.taux_change;
+                    document.getElementById('cfg_seuil').value = c.seuil_securite_cdf;
+                    document.getElementById('cfg_verrou').value = c.mois_verrouille;
+                }
+            });
+        }
+
+        function verifierSiMoisEstVerrouille(dateString) {
+            const moisSaisie = dateString.substring(0, 7);
+            const moisBloque = document.getElementById('cfg_verrou').value;
+            if (moisBloque !== "Aucun" && moisSaisie === moisBloque) {
+                alert("❌ Action Refusée ! Le Président a officiellement clôturé et verrouillé les écritures financières de ce mois.");
+                return true;
+            }
+            return false;
+        }
+
+        // 3. ENREGISTREMENTS ET TRAÇABILITÉ AUTOMATIQUE (MODE HORS-LIGNE)
         function executerEnregistrementSecurise(t, r) {
             r.cree_par = sessionUtilisateur ? sessionUtilisateur.identifiant : "ANONYME";
             if (!navigator.onLine) {
                 let f = JSON.parse(localStorage.getItem("eglise-offline-queue") || "[]");
-                f.push({ table: t, data: r });
-                localStorage.setItem("eglise-offline-queue", JSON.stringify(f));
-                alert("📡 Hors ligne ! Sauvegardé en mémoire locale. Synchronisation automatique au retour du réseau.");
+                f.push({ table: t, data: r }); localStorage.setItem("eglise-offline-queue", JSON.stringify(f));
+                alert("📡 Réseau coupé ! Sauvegardé en mémoire locale sur le smartphone. Synchronisation automatique au retour d'internet.");
                 chargerDonneesTableaux(); return;
             }
             supabaseClient.from(t).insert([r]).then(() => chargerDonneesTableaux());
         }
 
-        // CAPTURE DES FORMULAIRES EN FORMULES ULTRA-COURTES
-        const $id = id => document.getElementById(id).value;
+        const $id = id => document.getElementById(id) ? document.getElementById(id).value : '';
         document.getElementById('form-entree').addEventListener('submit', function(e){ e.preventDefault(); executerEnregistrementSecurise('transactions', { type_entree: $id('type_entree'), devise: $id('devise_entree'), motif_special: $id('motif_entree'), montant: $id('montant_entree') }); this.reset(); });
         document.getElementById('form-depense').addEventListener('submit', function(e){ e.preventDefault(); executerEnregistrementSecurise('depenses', { categorie: $id('categorie_depense'), source_financement: $id('source_depense'), devise: $id('devise_depense'), motif: $id('motif_depense'), montant: $id('montant_depense') }); this.reset(); });
         document.getElementById('form-membre').addEventListener('submit', function(e){ e.preventDefault(); executerEnregistrementSecurise('membres', { nom_postnom: $id('nom_membre'), baptise: $id('baptise'), etat_civil: $id('etat_civil'), adresse: $id('adresse'), contact: $id('contact') }); this.reset(); });
@@ -554,7 +587,8 @@
         document.getElementById('form-couche-caisse').addEventListener('submit', function(e){ e.preventDefault(); executerEnregistrementSecurise('caisses_couches_sociales', { libelle_mouvement: $id('cc_libelle'), couche_sociale: $id('cc_groupe'), type_mouvement: $id('cc_type'), devise: $id('cc_devise'), montant: $id('cc_montant') }); this.reset(); });
 
         function supprimerLigne(t, id) { if (confirm("Supprimer cette ligne pour corriger une erreur ?")) { supabaseClient.from(t).delete().eq('id', id).then(() => chargerDonneesTableaux()); } }
-        // RÉCUPÉRATION SYNCHRONE DES TABLES CLOUD DE L'ÉGLISE
+
+        // 4. CHARGEMENT TECHNIQUE ET REPARTITION PAR MONNAIE ÉTANCHE
         function chargerDonneesTableaux() {
             const deb = document.getElementById('date-debut').value;
             const fin = document.getElementById('date-fin').value;
@@ -564,6 +598,7 @@
             const estCouches = sessionUtilisateur.echelon === "Couche Sociale";
             const currentIdCompte = sessionUtilisateur.identifiant.toUpperCase();
             const cHide = estComite ? "" : "hidden";
+            const hideSoc = estComite || estSocial ? "" : "hidden";
 
             supabaseClient.from('transactions').select().then(r1 => {
             supabaseClient.from('depenses').select().then(r2 => {
@@ -584,7 +619,6 @@
                 let fDepenses = r2.data ? r2.data.filter(x => (!deb || x.date_depense >= deb) && (!fin || x.date_depense <= fin)) : [];
                 let fProgrammes = r7.data ? r7.data.filter(x => (!deb || x.date_culte >= deb) && (!fin || x.date_culte <= fin)) : [];
 
-                // 1. TRI ET DISTRIBUTION DES RECETTES ÉTANCHES
                 document.getElementById('table-entrees-body').innerHTML = fEntrees.map(e => {
                     const m = Number(e.montant); const dev = e.devise || 'CDF';
                     if (e.type_entree === "Offrande Développement") { if (dev === "USD") recDevUSD += m; else recDevCDF += m; }
@@ -592,7 +626,6 @@
                     return `<tr><td>${e.date_transaction}</td><td style="color:#059669;font-weight:bold;">${e.type_entree}</td><td>${e.motif_special||'-'}</td><td style="color:#059669;font-weight:bold;">+ ${m.toLocaleString()} ${dev}</td><td>${e.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('transactions', ${e.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`;
                 }).join('') || '<tr><td colspan="6" style="color:#475569;text-align:center;">Aucune entrée enregistrée</td></tr>';
 
-                // 2. TRI ET DISTRIBUTION DES DÉPENSES ÉTANCHES
                 document.getElementById('table-sorties-body').innerHTML = fDepenses.map(d => {
                     const m = Number(d.montant); const dev = d.devise || 'CDF';
                     if (d.source_financement === "Caisse Développement") { if (dev === "USD") depDevUSD += m; else depDevCDF += m; }
@@ -601,108 +634,59 @@
                     return `<tr><td>${d.date_depense}</td><td>${d.categorie}</td><td style="color:#6d28d9;font-weight:bold;">${d.source_financement}</td><td>${d.motif}</td><td style="color:#dc2626;font-weight:bold;">- ${m.toLocaleString()} ${dev}</td><td>${d.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('depenses', ${d.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`;
                 }).join('') || '<tr><td colspan="7" style="color:#475569;text-align:center;">Aucune sortie enregistrée</td></tr>';
 
-                // Calculs et rafraîchissement instantané des 4 compteurs cardinaux
                 let soldeFoncCDF = recFoncCDF - depFoncCDF; let soldeFoncUSD = recFoncUSD - depFoncUSD;
                 let soldeDevCDF = recDevCDF - depDevCDF; let soldeDevUSD = recDevUSD - depDevUSD;
-                // Mise à jour des 4 compteurs principaux avec les identifiants HTML exacts
-                document.getElementById('stat-caisse-fonc').innerHTML = `${soldeFoncCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#2563eb;">${soldeFoncUSD.toFixed(2)} USD</span>`;
-                document.getElementById('stat-caisse-dev').innerHTML = `${soldeDevCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#8b5cf6;">${soldeDevUSD.toFixed(2)} USD</span>`;
-                document.getElementById('stat-entrees').innerHTML = `${totalRecCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#10b981;">${totalRecUSD.toFixed(2)} USD</span>`;
-                document.getElementById('stat-depenses').innerHTML = `${totalDepCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#ef4444;">${totalDepUSD.toFixed(2)} USD</span>`;
+                let totalRecCDF = recFoncCDF + recDevCDF; let totalRecUSD = recFoncUSD + recDevUSD;
+                let totalDepCDF = depFoncCDF + depDevCDF; let totalDepUSD = depFoncUSD + depDevUSD;
 
-                document.getElementById('ana-ent-fonc-cdf').innerText = recFoncCDF.toLocaleString() + " CDF";
-                document.getElementById('ana-ent-fonc-usd').innerText = recFoncUSD.toFixed(2) + " USD";
-                document.getElementById('ana-dep-fonc-cdf').innerText = depFoncCDF.toLocaleString() + " CDF";
-                document.getElementById('ana-dep-usd').innerText = depFoncUSD.toFixed(2) + " USD";
-                document.getElementById('ana-solde-fonc-cdf').innerText = soldeFoncCDF.toLocaleString() + " CDF";
-                document.getElementById('ana-solde-fonc-usd').innerText = soldeFoncUSD.toFixed(2) + " USD";
-                document.getElementById('ana-solde-fonc-cdf').style.color = soldeFoncCDF >= 0 ? "#059669" : "#dc2626";
+                const cFonc = document.getElementById('stat-caisse-fonc'); if (cFonc) cFonc.innerHTML = `${soldeFoncCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#2563eb;font-weight:900;">${soldeFoncUSD.toFixed(2)} USD</span>`;
+                const cDev = document.getElementById('stat-caisse-dev'); if (cDev) cDev.innerHTML = `${soldeDevCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#8b5cf6;font-weight:900;">${soldeDevUSD.toFixed(2)} USD</span>`;
+                const cRec = document.getElementById('stat-entrees'); if (cRec) cRec.innerHTML = `${totalRecCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#10b981;font-weight:900;">${totalRecUSD.toFixed(2)} USD</span>`;
+                const cDep = document.getElementById('stat-depenses'); if (cDep) cDep.innerHTML = `${totalDepCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#ef4444;font-weight:900;">${totalDepUSD.toFixed(2)} USD</span>`;
+                // Rapporst Analytiques de la Période Selectionnée
+                if (document.getElementById('ana-ent-fonc-cdf')) {
+                    document.getElementById('ana-ent-fonc-cdf').innerText = recFoncCDF.toLocaleString() + " CDF"; document.getElementById('ana-ent-fonc-usd').innerText = recFoncUSD.toFixed(2) + " USD";
+                    document.getElementById('ana-dep-fonc-cdf').innerText = depFoncCDF.toLocaleString() + " CDF"; document.getElementById('ana-dep-fonc-usd').innerText = depFoncUSD.toFixed(2) + " USD";
+                    document.getElementById('ana-solde-fonc-cdf').innerText = soldeFoncCDF.toLocaleString() + " CDF"; document.getElementById('ana-solde-fonc-usd').innerText = soldeFoncUSD.toFixed(2) + " USD";
+                    document.getElementById('ana-solde-fonc-cdf').style.color = soldeFoncCDF >= 0 ? "#059669" : "#dc2626";
+                    document.getElementById('ana-ent-dev-cdf').innerText = recDevCDF.toLocaleString() + " CDF"; document.getElementById('ana-ent-dev-usd').innerText = recDevUSD.toFixed(2) + " USD";
+                    document.getElementById('ana-dep-dev-cdf').innerText = depDevCDF.toLocaleString() + " CDF"; document.getElementById('ana-dep-dev-usd').innerText = depDevUSD.toFixed(2) + " USD";
+                    document.getElementById('ana-solde-dev-cdf').innerText = soldeDevCDF.toLocaleString() + " CDF"; document.getElementById('ana-solde-dev-usd').innerText = soldeDevUSD.toFixed(2) + " USD";
+                    document.getElementById('ana-dep-soc-cdf').innerText = depSocCDF.toLocaleString() + " CDF"; document.getElementById('ana-dep-soc-usd').innerText = depSocUSD.toFixed(2) + " USD";
+                }
 
-                document.getElementById('ana-ent-dev-cdf').innerText = recDevCDF.toLocaleString() + " CDF";
-                document.getElementById('ana-ent-dev-usd').innerText = recDevUSD.toFixed(2) + " USD";
-                document.getElementById('ana-dep-dev-cdf').innerText = depDevCDF.toLocaleString() + " CDF";
-                document.getElementById('ana-dep-dev-usd').innerText = depDevUSD.toFixed(2) + " USD";
-                document.getElementById('ana-solde-dev-cdf').innerText = soldeDevCDF.toLocaleString() + " CDF";
-                document.getElementById('ana-solde-dev-usd').innerText = soldeDevUSD.toFixed(2) + " USD";
-                document.getElementById('ana-dep-soc-cdf').innerText = depSocCDF.toLocaleString() + " CDF";
-                document.getElementById('ana-dep-soc-usd').innerText = depSocUSD.toFixed(2) + " USD";
-
-                // 4. FILTRAGE ET ÉTANCHÉITÉ DES MODULES DES COUCHES SOCIALES
+                // 4. Traitement Restreint et Filtrage des Couches Sociales
                 let mCouches = r9.data ? r9.data : []; let cCouches = r10.data ? r10.data : []; let aCouches = r11.data ? r11.data : [];
                 if (estCouches) {
                     mCouches = mCouches.filter(x => x.couche_sociale.toUpperCase().includes(currentIdCompte));
                     cCouches = cCouches.filter(x => x.couche_sociale.toUpperCase().includes(currentIdCompte));
                     aCouches = aCouches.filter(x => x.couche_sociale.toUpperCase().includes(currentIdCompte));
                 }
-                const hideCS = estComite || estCouches ? "" : "hidden";
-                document.getElementById('table-couches-membres-body').innerHTML = mCouches.map(m => `<tr><td><b>${m.nom_fidele}</b></td><td>${m.couche_sociale}</td><td>${m.role_groupe||'-'}</td><td>${m.date_adhesion}</td><td>${m.cree_par||'-'}</td><td class="${hideCS}"><button onclick="supprimerLigne('membres_couches_sociales', ${m.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="6">Aucun membre inscrit</td></tr>';
-                document.getElementById('table-couches-activites-body').innerHTML = aCouches.map(a => `<tr><td>${a.date_activite}</td><td>${a.couche_sociale}</td><td><b>${a.libelle_activite}</b></td><td style="color:#0d9488;font-weight:bold;">${a.nb_presents} Présents</td><td>${a.cree_par||'-'}</td><td class="${hideCS}"><button onclick="supprimerLigne('activites_couches_sociales', ${a.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="6">Aucune activité aujourd\'hui</td></tr>';
-                document.getElementById('table-couches-caisse-body').innerHTML = cCouches.map(c => `<tr><td>${c.date_mouvement}</td><td>${c.couche_sociale}</td><td>${c.libelle_mouvement}</td><td><b>${c.type_mouvement}</b></td><td style="color:#d97706;font-weight:bold;">${Number(c.montant).toLocaleString()} ${c.devise}</td><td>${c.cree_par||'-'}</td><td class="${hideCS}"><button onclick="supprimerLigne('caisses_couches_sociales', ${c.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="7">Aucune cotisation enregistrée</td></tr>';
+                const tMembres = document.getElementById('table-couches-membres-body'); if (tMembres) tMembres.innerHTML = mCouches.map(m => `<tr><td><b>${m.nom_fidele}</b></td><td>${m.couche_sociale}</td><td>${m.role_groupe||'-'}</td><td>${m.date_adhesion}</td><td>${m.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('membres_couches_sociales', ${m.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;">Aucun membre inscrit</td></tr>';
+                const tActivites = document.getElementById('table-couches-activites-body'); if (tActivites) tActivites.innerHTML = aCouches.map(a => `<tr><td>${a.date_activite}</td><td>${a.couche_sociale}</td><td><b>${a.libelle_activite}</b></td><td style="color:#0d9488;font-weight:bold;">${a.nb_presents} Présents</td><td>${a.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('activites_couches_sociales', ${a.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;">Aucune activité aujourd\'hui</td></tr>';
+                const tCaisse = document.getElementById('table-couches-caisse-body'); if (tCaisse) tCaisse.innerHTML = cCouches.map(c => `<tr><td>${c.date_mouvement}</td><td>${c.couche_sociale}</td><td>${c.libelle_mouvement}</td><td><b>${c.type_mouvement}</b></td><td style="color:#d97706;font-weight:bold;">${Number(c.montant).toLocaleString()} ${c.devise}</td><td>${c.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('caisses_couches_sociales', ${c.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="7" style="text-align:center;">Aucune cotisation enregistrée</td></tr>';
 
-                               // 5. REMPLISSAGE DES COMPTES CENTRAUX ET PATRIMOINE
-                let idxM=1; document.getElementById('table-membres-body').innerHTML = r3.data.map(m => `<tr><td>${idxM++}</td><td><b>${m.nom_postnom}</b></td><td><span style="color:#059669;">${m.baptise}</span></td><td>${m.etat_civil||'-'}</td><td>${m.adresse||'-'}</td><td style="color:var(--primary);">${m.contact||'-'}</td><td>${m.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('membres', ${m.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun fidèle enregistré</td></tr>';
-                let idxB=1; document.getElementById('table-biens-body').innerHTML = r4.data.map(b => `<tr><td>${idxB++}</td><td><b>${b.designation}</b></td><td><b>${b.quantite}</b></td><td>${b.etat}</td><td style="color:#d97706;">${b.statut_bien||'En action'}</td><td><i>📍 ${b.emplacement_bien||'-'}</i></td><td>${b.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('biens', ${b.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun bien matériel répertorié</td></tr>';
-                let idxD=1; document.getElementById('table-documents-body').innerHTML = r5.data.map(d => `<tr><td>${idxD++}</td><td style="color:#c084fc;"><b>${d.titre_document}</b></td><td>${d.categorie||'-'}</td><td><i>📍 ${d.lieu_conservation}</i></td><td>${d.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('documents_sacres', ${d.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="6">Aucun document consigné</td></tr>';
-                let idxP=1; document.getElementById('table-projets-body').innerHTML = r6.data.map(p => `<tr><td>${idxP++}</td><td><b>${p.nom_projet}</b></td><td style="color:var(--primary);">${Number(p.budget_estime_cdf).toLocaleString()} CDF</td><td>${p.responsable||'-'}</td><td><b>${p.statut}</b></td><td>${p.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('projets', ${p.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="7">Aucun projet enregistré</td></tr>';
-                document.getElementById('table-programmes-body').innerHTML = fProgrammes.map(pr => `<tr><td>${pr.date_culte}</td><td><b>Thème : ${pr.theme}</b></td><td>${pr.predicateur||'-'}</td><td>${pr.moderateur||'-'}</td><td>👨${pr.nb_hommes} | 👩${pr.nb_femmes} | 👧${pr.nb_enfants} | 👥${pr.nb_visiteurs||0}</td><td style="font-weight:bold;color:#0d9488;background:#f0fdfa;text-align:center;">${(Number(pr.nb_hommes)+Number(pr.nb_femmes)+Number(pr.nb_enfants)+Number(pr.nb_visiteurs||0)).toLocaleString()} Total</td><td>${pr.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('programmes_cultes', ${pr.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun culte enregistré</td></tr>';
-
-                // 6. GESTION ADMINISTRATIVE DU RÉPERTOIRE SOCIAL (CORRIGÉ ICI POUR ADAPTATION ÉCRAN)
-                const hideSoc = estComite || estSocial ? "" : "hidden";
-                let idxS=1; 
-                if (document.getElementById('table-social-body')) {
-                    document.getElementById('table-social-body').innerHTML = r8.data.map(s => `<tr><td>${idxS++}</td><td><b>${s.nom_complet}</b></td><td><span style="color:#a855f7;">${s.categorie}</span></td><td>${s.adresse||'-'}</td><td>${s.contact_tuteur||'-'}</td><td>${s.assistance_accordee||'-'}</td><td>${s.cree_par||'-'}</td><td class="${hideSoc}"><button onclick="supprimerLigne('assistance_sociale', ${s.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun dossier social enregistré</td></tr>';
-                }
-                 hideSoc = estComite || estSocial ? "" : "hidden";
-               ; document.getElementById('table-social-body').innerHTML = r8.data.map(s => `<tr><td><b>${s.nom_complet}</b></td><td><span style="color:#a855f7;">${s.categorie}</span></td><td>${s.adresse||'-'}</td><td>${s.contact_tuteur||'-'}</td><td>${s.assistance_accordee||'-'}</td><td>${s.cree_par||'-'}</td><td class="${hideSoc}"><button onclick="supprimerLigne('assistance_sociale', ${s.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun dossier social enregistré</td></tr>';
+                // 5. Remplissage Administratif Commun (Fidèles généraux, Biens, Docs, Projets, Programmes)
+                let idxM=1; const tMembresGen = document.getElementById('table-membres-body'); if (tMembresGen) tMembresGen.innerHTML = r3.data.map(m => `<tr><td>${idxM++}</td><td><b>${m.nom_postnom}</b></td><td><span style="color:#059669;font-weight:bold;">${m.baptise}</span></td><td>${m.etat_civil||'-'}</td><td>${m.adresse||'-'}</td><td style="color:var(--primary);font-weight:bold;">${m.contact||'-'}</td><td>${m.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('membres', ${m.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun fidèle enregistré</td></tr>';
+                let idxB=1; const tBiensGen = document.getElementById('table-biens-body'); if (tBiensGen) tBiensGen.innerHTML = r4.data.map(b => `<tr><td>${idxB++}</td><td><b>${b.designation}</b></td><td><b>${b.quantite}</b></td><td>${b.etat}</td><td style="color:#d97706;font-weight:bold;">${b.statut_bien||'En action'}</td><td><i>📍 ${b.emplacement_bien||'-'}</i></td><td>${b.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('biens', ${b.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun matériel répertorié</td></tr>';
+                let idxD=1; const tDocsGen = document.getElementById('table-documents-body'); if (tDocsGen) tDocsGen.innerHTML = r5.data.map(d => `<tr><td>${idxD++}</td><td style="color:#c084fc;font-weight:bold;">${d.titre_document}</td><td>${d.categorie||'-'}</td><td><i>📍 ${d.lieu_conservation}</i></td><td>${d.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('documents_sacres', ${d.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="6">Aucun document consigné</td></tr>';
+                let idxP=1; const tProjGen = document.getElementById('table-projets-body'); if (tProjGen) tProjGen.innerHTML = r6.data.map(p => `<tr><td>${idxP++}</td><td><b>${p.nom_projet}</b></td><td style="color:var(--primary);font-weight:bold;">${Number(p.budget_estime_cdf).toLocaleString()} CDF</td><td>${p.responsable||'-'}</td><td><b>${p.statut}</b></td><td>${p.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('projets', ${p.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="7">Aucun projet enregistré</td></tr>';
+                const tProgGen = document.getElementById('table-programmes-body'); if (tProgGen) tProgGen.innerHTML = fProgrammes.map(pr => `<tr><td>${pr.date_culte}</td><td><b>Thème : ${pr.theme}</b></td><td>${pr.predicateur||'-'}</td><td>${pr.moderateur||'-'}</td><td>👨${pr.nb_hommes} | 👩${pr.nb_femmes} | 👧${pr.nb_enfants} | 👥${pr.nb_visiteurs||0}</td><td style="font-weight:bold;color:#0d9488;background:#f0fdfa;text-align:center;border-radius:4px;">${(Number(pr.nb_hommes)+Number(pr.nb_femmes)+Number(pr.nb_enfants)+Number(pr.nb_visiteurs||0)).toLocaleString()} Total</td><td>${pr.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('programmes_cultes', ${pr.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucune activité enregistrée</td></tr>';
+                let idxS=1; const tSocGen = document.getElementById('table-social-body'); if (tSocGen) tSocGen.innerHTML = r8.data.map(s => `<tr><td>${idxS++}</td><td><b>${s.nom_complet}</b></td><td><span style="color:#a855f7;font-weight:bold;">${s.categorie}</span></td><td>${s.adresse||'-'}</td><td>${s.contact_tuteur||'-'}</td><td>${s.assistance_accordee||'-'}</td><td>${s.cree_par||'-'}</td><td class="${hideSoc}"><button onclick="supprimerLigne('assistance_sociale', ${s.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun dossier social enregistré</td></tr>';
             }); }); }); }); }); }); }); }); }); }); });
         }
-       // 🔒 SAUVEGARDE DES PARAMÈTRES DU PRÉSIDENT ET FERMETURE AUTOMATIQUE
-        function sauvegarderParametresPresident() {
-            if (!sessionUtilisateur || sessionUtilisateur.echelon !== "Comité") return;
-            const up = {
-                taux_change: Number(document.getElementById('cfg_taux').value) || 2850,
-                seuil_securite_cdf: Number(document.getElementById('cfg_seuil').value) || 200000,
-                mois_verrouille: document.getElementById('cfg_verrou').value
-            };
-            supabaseClient.from('config_eglise').insert([{ id: 1, ...up }]).then(() => {
-                fermerMenuControle(); // <-- CETTE LIGNE AJOUTÉE FERME LE MENU APRÈS CHANGEMENT
-                chargerDonneesTableaux();
-            });
-        }
 
-        // CHARGEMENT INITIAL DES PARAMÈTRES PRÉSIDENTIELS AU DÉMARRAGE DU MENU
-        function chargerParametresPresident() {
-            supabaseClient.from('config_eglise').select().then(res => {
-                if (res.data && res.data.length > 0) {
-                    const c = res.data[0];
-                    document.getElementById('cfg_taux').value = c.taux_change;
-                    document.getElementById('cfg_seuil').value = c.seuil_securite_cdf;
-                    document.getElementById('cfg_verrou').value = c.mois_verrouille;
-                }
-            });
-        }
+        // 5. COMPTEUR DE SÉCURITÉ INACTIVITÉ ET RECONCURRENCE DES SESSIONS
+        function resetTimer() { tempsInactivite = 0; }
+        document.onmousemove = resetTimer; document.onkeypress = resetTimer; document.ontouchstart = resetTimer;
+        setInterval(function() { if (sessionUtilisateur) { tempsInactivite++; if (tempsInactivite >= 600) { alert("⏱️ Session déconnectée après 10 minutes d'inactivité."); deconnexion(); } } }, 1000);
 
-        // AMÉLIORATION DE LA PROTECTION DES COUPE-FEUX (À LEVER DANS VOTRE CODE EXISTANT)
-        // Avant chaque suppression ou modification, l'application vérifie cette règle :
-        function verifierSiMoisEstVerrouille(dateString) {
-            const moisSaisie = dateString.substring(0, 7); // Extrait 'YYYY-MM'
-            const moisBloque = document.getElementById('cfg_verrou').value;
-            if (moisBloque !== "Aucun" && moisSaisie === moisBloque) {
-                alert("❌ Opération Refusée ! Le Président a officiellement clôturé et verrouillé les écritures comptables de ce mois.");
-                return true;
-            }
-            return false;
-        }
-                function fermerMenuControle() { 
-            document.getElementById('panel-controle-president').classList.add('hidden'); 
-        }
-        // AMBIANCE INITIALE DU SYSTEME DE COULEURS ET DECONNEXION
         function deconnexion() { localStorage.removeItem("eglise-session-courte"); sessionUtilisateur = null; document.getElementById('section-connexion').className = "card-box"; document.getElementById('section-connexion').classList.remove('hidden'); document.getElementById('section-dashboard').classList.add('hidden'); document.body.style.display = "flex"; }
         
         (function() {
             const savedTheme = localStorage.getItem("eglise-theme-actif") || "theme-bleu";
             document.body.className = ""; document.body.classList.add(savedTheme);
-            document.getElementById('select-theme-app').value = savedTheme;
+            if (document.getElementById('select-theme-app')) document.getElementById('select-theme-app').value = savedTheme;
 
             const sessionActive = localStorage.getItem("eglise-session-courte");
             if (sessionActive) {
@@ -715,3 +699,4 @@
     </script>
 </body>
 </html>
+
