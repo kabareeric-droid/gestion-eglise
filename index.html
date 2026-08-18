@@ -60,7 +60,7 @@
         body.theme-contraste th { background: #000000; color: #ffffff; }
         tr:hover { background-color: #f1f5f9; }
     </style>
-    <!-- Moteur cloud autonome intégré (Zéro dépendance, immunisé contre les pannes) -->
+    <!-- Code du moteur intégré Supabase (Aucun téléchargement externe bloquant) -->
     <script>
         !function(e,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports):"function"==typeof define&&define.amd?define(["exports"],t):t((e="undefined"!=typeof globalThis?globalThis:e||self).supabase={})}(this,(function(e){"use strict";
         e.createClient = function(url, key) {
@@ -80,7 +80,7 @@
 </head>
 <body class="theme-bleu">
 
-    <!-- ÉCRAN DE CONNEXION AVEC IDENTIFIANTS COURTS -->
+    <!-- ÉCRAN DE CONNEXION AVEC IDENTIFIANT COURT -->
     <div id="section-connexion" class="card-box" style="width: 100%; max-w: 390px;">
         <div class="text-center">
             <span style="font-size: 3rem;">⛪</span>
@@ -105,17 +105,23 @@
         <!-- EN-TÊTE PRINCIPAL RESPONSIVE ET ACCESSIBLE -->
         <header class="header-app">
             <div>
-                <h1 style="margin: 0; color: var(--primary); font-size: 1.4rem; font-weight: 900;">⛪ ASS.BETHEL GEST</h1>
+                <h1 style="margin: 0; color: var(--primary); font-size: 1.4rem; font-weight: 900;">⛪ Portail de Gestion Parfaite</h1>
                 <p style="margin: 0; color: #475569; font-size: 0.85rem; font-weight: 700;">Compte : <span id="user-display" style="color: var(--primary);">...</span> | Échelon : <span id="user-role" style="font-weight: 900; color: #dc2626;">...</span></p>
             </div>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <!-- Bouton Menu de Contrôle Présidentiel Secret -->
                 <button onclick="ouvrirMenuControle()" id="btn-menu-admin" class="zone-president-seul hidden" style="background: #f1f5f9; border: 2px solid #cbd5e1; font-size: 1.3rem; padding: 0.4rem; border-radius: 0.5rem; cursor: pointer;" title="Contrôle Échelons & Thèmes">⚙️</button>
                 <button onclick="deconnexion()" style="background: #fef2f2; color: #b91c1c; border: 2px solid #f87171; padding: 0.45rem 0.75rem; border-radius: 0.5rem; font-size: 0.85rem; font-weight: 800; cursor: pointer; width: auto;">Déconnexion 🚪</button>
             </div>
         </header>
 
-                  <div class="grid" style="grid-template-columns: 1fr; gap: 0.75rem;">
+        <!-- PANEL DU SÉLECTEUR DE MENU DE CONTRÔLE PRÉSIDENTIEL SECRET -->
+        <div id="panel-controle-president" class="card-box hidden" style="margin-bottom: 0.5rem; border-color: var(--primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 0.75rem;">
+                <h3 style="margin: 0; color: var(--primary); font-weight: 900;">⚙️ Panneau de Commandement du Président</h3>
+                <button onclick="fermerMenuControle()" style="background: none; border: none; font-size: 1.2rem; font-weight: bold; cursor: pointer; color: #64748b;">✕</button>
+            </div>
+            
+            <div class="grid" style="grid-template-columns: 1fr; gap: 0.75rem;">
                 <!-- 1. ADAPTATION DU THEME POUR LES AÎNÉS -->
                 <div style="background: #f8fafc; padding: 0.65rem; border-radius: 0.5rem; border: 1px solid #cbd5e1;">
                     <label style="font-size: 0.85rem; font-weight: 800; color: var(--primary);">🎨 Adapter l'Ambiance de l'Application :</label>
@@ -175,7 +181,9 @@
                     </div>
                 </div>
             </div>
-        <!-- SYSTÈME D'ONGLETS INTÉGRAL (DÉFILANT SUR SMARTPHONE) -->
+        </div>
+
+        <!-- BARRE DE NAVIGATION COMMUTATRICE DES 10 ONGLETS -->
         <div style="background: var(--bg-card); border-radius: 0.75rem 0.75rem 0 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 0.4rem; border: 2px solid var(--border-color);">
             <div class="onglet-barre">
                 <button onclick="changerOnglet('tab-entrees')" id="btn-tab-entrees" class="onglet-btn actif menu-general">📥 Entrées</button>
@@ -190,33 +198,28 @@
                 <button onclick="changerOnglet('tab-couches')" id="btn-tab-couches" class="onglet-btn menu-couches-seul">🏛️ Couches</button>
             </div>
         </div>
-
-        <!-- ZONE DU COMPLEMENT FINANCIER : DOUBLE MONNAIE SÉPARÉE (CDF / USD) -->
+        <!-- ZONE DU COMPLÉMENT FINANCIER : DOUBLE MONNAIE SÉPARÉE (CDF / USD) -->
         <div id="zone-caisses-visibles" style="background: var(--bg-card); padding: 0.6rem; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 0.5rem; border: 2px solid var(--border-color); display: flex; flex-direction: column; gap: 0.5rem;">
             <div class="grid grid-4" style="gap: 0.4rem;">
                 <!-- Caisse Fonctionnement -->
                 <div class="card-stat" style="border-left-color: #3b82f6; background: #eff6ff; padding: 0.45rem;">
                     <p style="margin:0; font-size:0.65rem; color:#1e40af; font-weight:800;">💵 CAISSE FONCTIONNEMENT</p>
-                    <p id="stat-fonc-cdf" style="margin:2px 0 0 0; font-size:0.95rem; font-weight:900; color:#1e3a8a;">0 CDF</p>
-                    <p id="stat-fonc-usd" style="margin:0; font-size:0.95rem; font-weight:900; color:#2563eb;">0.00 USD</p>
+                    <div id="stat-caisse-fonc" style="margin:2px 0 0 0; font-size:0.95rem; font-weight:900; color:#1e3a8a;">0 CDF<br><span style="font-size:0.85rem;color:#2563eb;font-weight:900;">0.00 USD</span></div>
                 </div>
                 <!-- Caisse Développement -->
                 <div class="card-stat" style="border-left-color: #a855f7; background: #f5f3ff; padding: 0.45rem;">
                     <p style="margin:0; font-size:0.65rem; color:#6b21a8; font-weight:800;">🧱 CAISSE DÉVELOPPEMENT</p>
-                    <p id="stat-dev-cdf" style="margin:2px 0 0 0; font-size:0.95rem; font-weight:900; color:#6d28d9;">0 CDF</p>
-                    <p id="stat-dev-usd" style="margin:0; font-size:0.95rem; font-weight:900; color:#8b5cf6;">0.00 USD</p>
+                    <div id="stat-caisse-dev" style="margin:2px 0 0 0; font-size:0.95rem; font-weight:900; color:#6d28d9;">0 CDF<br><span style="font-size:0.85rem;color:#8b5cf6;font-weight:900;">0.00 USD</span></div>
                 </div>
                 <!-- Total Recettes -->
                 <div class="card-stat" style="border-left-color: #10b981; background: #f0fdf4; padding: 0.45rem;">
                     <p style="margin:0; font-size:0.65rem; color:#065f46; font-weight:800;">📥 TOTAL RECETTES PERÇUES</p>
-                    <p id="stat-rec-cdf" style="margin:2px 0 0 0; font-size:0.95rem; font-weight:900; color:#059669;">0 CDF</p>
-                    <p id="stat-rec-usd" style="margin:0; font-size:0.95rem; font-weight:900; color:#10b981;">0.00 USD</p>
+                    <div id="stat-entrees" style="margin:2px 0 0 0; font-size:0.95rem; font-weight:900; color:#059669;">0 CDF<br><span style="font-size:0.85rem;color:#10b981;font-weight:900;">0.00 USD</span></div>
                 </div>
                 <!-- Total Dépenses -->
                 <div class="card-stat" style="border-left-color: #ef4444; background: #fef2f2; padding: 0.45rem;">
                     <p style="margin:0; font-size:0.65rem; color:#991b1b; font-weight:800;">📤 TOTAL DÉPENSES EFFECTUÉES</p>
-                    <p id="stat-dep-cdf" style="margin:2px 0 0 0; font-size:0.95rem; font-weight:900; color:#dc2626;">0 CDF</p>
-                    <p id="stat-dep-usd" style="margin:0; font-size:0.95rem; font-weight:900; color:#ef4444;">0.00 USD</p>
+                    <div id="stat-depenses" style="margin:2px 0 0 0; font-size:0.95rem; font-weight:900; color:#dc2626;">0 CDF<br><span style="font-size:0.85rem;color:#ef4444;font-weight:900;">0.00 USD</span></div>
                 </div>
             </div>
 
@@ -258,7 +261,8 @@
                     </form>
                     <div class="table-responsive"><table><thead><tr><th>Date</th><th>Catégorie</th><th>Source</th><th>Motif</th><th>Montant Sorti</th><th>Auteur</th><th class="zone-comite hidden">Actions</th></tr></thead><tbody id="table-sorties-body"></tbody></table></div>
                 </div>
-                <!-- 3. TABLEAU DES MEMBRES -->
+
+                <!-- 3. TABLEAU DES MEMBRES (FIDÈLES) -->
                 <div id="tab-membres" class="onglet-content hidden">
                     <form id="form-membre" class="zone-comite hidden form-saisie">
                         <input type="text" id="nom_membre" class="input-text" placeholder="Nom & Post-nom du fidèle" required>
@@ -271,7 +275,7 @@
                     <div class="table-responsive"><table><thead><tr><th>N°</th><th>Nom & Post-nom</th><th>État Spirituel</th><th>État Civil</th><th>Adresse</th><th>Contact</th><th>Auteur</th><th class="zone-comite hidden">Actions</th></tr></thead><tbody id="table-membres-body"></tbody></table></div>
                 </div>
 
-                <!-- 4. TABLEAU DES BIENS (PATRIMOINE AVEC COLONNES TRAÇABILITÉ ET VOL/DÉPÔT) -->
+                <!-- 4. TABLEAU DES BIENS PATRIMOINE -->
                 <div id="tab-biens" class="onglet-content hidden">
                     <form id="form-bien" class="zone-comite hidden form-saisie">
                         <div style="flex:2; min-width:150px;"><input type="text" id="desig_bien" class="input-text" placeholder="Désignation de l'équipement" required></div>
@@ -356,7 +360,7 @@
                     <div class="table-responsive"><table><thead><tr><th>N°</th><th>Nom Complet</th><th>Statut</th><th>Adresse</th><th>Contact / Tuteur</th><th>Assistance</th><th>Auteur</th><th class="zone-social-saisie hidden">Actions</th></tr></thead><tbody id="table-social-body"></tbody></table></div>
                 </div>
 
-                <!-- 10. LE GRAND MODULE DES COUCHES SOCIALES INTERNES (RESTREINT AUX LEADERS) -->
+                <!-- 10. LE GRAND MODULE DES COUCHES SOCIALES INTERNES -->
                 <div id="tab-couches" class="onglet-content hidden" style="display: flex; flex-direction: column; gap: 0.75rem;">
                     <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 0.5rem; border: 1px dashed var(--border-color); font-weight: 800; font-size: 0.85rem;">
                         ⚖️ Votre Couche Sociale active : <span id="label-couche-active" style="color:var(--primary); font-size:0.95rem;">Toutes (Vue Président)</span>
@@ -402,7 +406,7 @@
             </div>
         </div>
     </div>
-       <script>
+    <script>
         // CONFIGURATION SECURISEE DIRECTE SUPABASE
         const SUPABASE_URL = "https://xgibabbmmhflhjocvykr.supabase.co"; 
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnaWJhYmJtbWhmbGhqb2N2eWtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MTk3OTgsImV4cCI6MjEwMjM5NTc5OH0.WuXLVe7slbu3eS96SEbFLzh4nYmuiYr8pGuRlI8K8rc"; 
@@ -411,7 +415,7 @@
         let sessionUtilisateur = null;
         let tempsInactivite = 0;
 
-        // 1. FORMULAIRE DE CONNEXION PAR CODE COURT
+        // 1. SÉCURITÉ : CONNEXION PAR IDENTIFIANT COURT
         document.getElementById('form-connexion').addEventListener('submit', async (e) => {
             e.preventDefault();
             const idSaisi = document.getElementById('identifiant_court').value.trim().toUpperCase();
@@ -424,15 +428,17 @@
                     sessionUtilisateur = ut;
                     localStorage.setItem("eglise-session-courte", JSON.stringify(ut));
                     appliquerDroitsEchelonsEtDemarrer();
-                } else { alert("⚠️ Identifiant ou mot de passe incorrect."); }
+                } else {
+                    alert("⚠️ Identifiant ou mot de passe incorrect.");
+                }
             });
         });
 
-                // 🛡️ RE-BRANCHEMENT DES DROITS ET MASQUAGE STRICT DE L'ESPACE PRÉSIDENTIEL
+        // 🛡️ APPLICATION DE L'ÉTANCHÉITÉ STRICTE DES ÉCHELONS
         function appliquerDroitsEchelonsEtDemarrer() {
             if (!sessionUtilisateur) return;
 
-            // Masquage forcé immédiat du panneau présidentiel pour réinitialiser la sécurité
+            // Masquage forcé immédiat du panneau présidentiel au démarrage pour réinitialiser la sécurité
             if(document.getElementById('panel-controle-president')) {
                 document.getElementById('panel-controle-president').classList.add('hidden');
             }
@@ -450,12 +456,14 @@
             if(document.getElementById('zone-caisses-visibles')) document.getElementById('zone-caisses-visibles').classList.remove('hidden');
             if(document.getElementById('btn-menu-admin')) document.getElementById('btn-menu-admin').classList.add('hidden');
 
+            // --- CAS 1 : LE LEADER DE COUCHE SOCIALE (ÉTANCHÉITÉ ABSOLUE) ---
             if (echelon === "Couche Sociale") {
                 document.querySelectorAll('.menu-general, .menu-social-seul').forEach(b => b.classList.add('hidden'));
                 if(document.getElementById('zone-caisses-visibles')) document.getElementById('zone-caisses-visibles').classList.add('hidden');
                 if(document.getElementById('label-couche-active')) document.getElementById('label-couche-active').innerText = idCompte + " (Accès Dédié 👥)";
-                ['cm_groupe', 'ca_groupe', 'cc_groupe'].forEach(id => {
-                    const drop = document.getElementById(id);
+                
+                ['cm_groupe', 'ca_groupe', 'cc_groupe'].forEach(selectId => {
+                    const drop = document.getElementById(selectId);
                     if (drop) {
                         for (let i = 0; i < drop.options.length; i++) {
                             if (drop.options[i].value.toUpperCase().includes(idCompte)) { drop.selectedIndex = i; break; }
@@ -465,40 +473,50 @@
                 });
                 document.querySelectorAll('.zone-couches-saisie').forEach(f => f.classList.remove('hidden'));
                 changerOnglet('tab-couches');
+            // --- CAS 2 : LA GESTION SOCIALE DETACHÉE ---
             } else if (echelon === "Social") {
                 document.querySelectorAll('.menu-general, .menu-couches-seul').forEach(b => b.classList.add('hidden'));
                 if(document.getElementById('zone-caisses-visibles')) document.getElementById('zone-caisses-visibles').classList.add('hidden');
                 document.querySelectorAll('.zone-social-saisie').forEach(f => f.classList.remove('hidden'));
                 changerOnglet('tab-social');
+
+            // --- CAS 3 : LE PASTEUR / SERVITEUR (LECTURE SEULE GLOBAL) ---
             } else if (echelon === "Serviteur") {
                 if(document.getElementById('label-couche-active')) document.getElementById('label-couche-active').innerText = "Toutes (Lecture Seule 🔎)";
                 document.querySelectorAll('.form-saisie, .btn-act, .zone-comite, .zone-social-saisie, .zone-couches-saisie').forEach(el => el.classList.add('hidden'));
                 changerOnglet('tab-entrees');
+
+            // --- CAS 4 : LE PRÉSIDENT / COMITÉ (ACCÈS ENTRALE ABSOLU) ---
             } else if (echelon === "Comité") {
                 if(document.getElementById('label-couche-active')) document.getElementById('label-couche-active').innerText = "Toutes (Vue Président 👑)";
                 if(document.getElementById('btn-menu-admin')) document.getElementById('btn-menu-admin').classList.remove('hidden');
                 document.querySelectorAll('.form-saisie, .zone-comite, .zone-social-saisie, .zone-couches-saisie').forEach(el => el.classList.remove('hidden'));
                 ['cm_groupe', 'ca_groupe', 'cc_groupe'].forEach(id => {
-                    const el = document.getElementById(id); if (el) { el.style.pointerEvents = "auto"; el.style.background = "#ffffff"; }
+                    const el = document.getElementById(id);
+                    if (el) { el.style.pointerEvents = "auto"; el.style.background = "#ffffff"; }
                 });
                 changerOnglet('tab-entrees');
             }
+
             document.getElementById('date-debut').value = "2026-08-01";
             document.getElementById('date-fin').value = "2026-08-18";
-            chargerParametresPresident(); chargerDonneesTableaux();
+            
+            chargerParametresPresident();
+            chargerDonneesTableaux();
         }
 
+        // NAVIGATION COMMUTATRICE DES ONGLES
         function changerOnglet(tabId) {
             document.querySelectorAll('.onglet-content').forEach(el => el.classList.add('hidden'));
             const targetTab = document.getElementById(tabId); if (targetTab) targetTab.classList.remove('hidden');
             document.querySelectorAll('.onglet-btn').forEach(btn => btn.classList.remove('actif'));
             const targetBtn = document.getElementById('btn-' + tabId); if (targetBtn) targetBtn.classList.add('actif');
         }
-        // 2. LOGIQUE DE CONTRÔLE DU PANNEAU PRÉSIDENTIEL ⚙️
+
+        // CONTROLE DU PANNEAU PRÉSIDENTIEL SECRET ⚙️
         function ouvrirMenuControle() { try { document.getElementById('panel-controle-president').classList.remove('hidden'); chargerUtilisateursDansMenu(); } catch(e){} }
         function fermerMenuControle() { try { document.getElementById('panel-controle-president').classList.add('hidden'); } catch(e){} }
         function changerThemeApplication(nomTheme) { document.body.className = ""; document.body.classList.add(nomTheme); localStorage.setItem("eglise-theme-actif", nomTheme); }
-
         function chargerUtilisateursDansMenu() {
             if (!sessionUtilisateur || sessionUtilisateur.echelon !== "Comité") return;
             supabaseClient.from('utilisateurs_eglise').select().then(res => {
@@ -537,7 +555,6 @@
                 }
             });
         }
-
         // 3. LOGIQUE SECURISEE DE SAISIE AVEC ENREGISTREMENT ET TRACABILITÉ
         function executerEnregistrementSecurise(t, r) {
             r.cree_par = sessionUtilisateur ? sessionUtilisateur.identifiant : "ANONYME";
@@ -562,7 +579,6 @@
 
         function supprimerLigne(t, id) { if (confirm("Supprimer cette ligne pour corriger une erreur ?")) { supabaseClient.from(t).delete().eq('id', id).then(() => chargerDonneesTableaux()); } }
         // 4. CHARGEMENT TECHNIQUE ET REPARTITION PAR MONNAIE ÉTANCHE
-              // 4. CHARGEMENT TECHNIQUE ET REPARTITION PAR MONNAIE ÉTANCHE
         function chargerDonneesTableaux() {
             const deb = document.getElementById('date-debut').value;
             const fin = document.getElementById('date-fin').value;
@@ -612,7 +628,7 @@
 
                 let soldeFoncCDF = recFoncCDF - depFoncCDF; let soldeFoncUSD = recFoncUSD - depFoncUSD;
                 let soldeDevCDF = recDevCDF - depDevCDF; let soldeDevUSD = recDevUSD - depDevUSD;
-
+                // Injection rigoureuse et sécurisée dans vos 4 cartes du haut
                 try {
                     if (document.getElementById('stat-caisse-fonc')) document.getElementById('stat-caisse-fonc').innerHTML = `${soldeFoncCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#2563eb;font-weight:900;">${soldeFoncUSD.toFixed(2)} USD</span>`;
                     if (document.getElementById('stat-caisse-dev')) document.getElementById('stat-caisse-dev').innerHTML = `${soldeDevCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#8b5cf6;font-weight:900;">${soldeDevUSD.toFixed(2)} USD</span>`;
@@ -620,25 +636,19 @@
                     if (document.getElementById('stat-depenses')) document.getElementById('stat-depenses').innerHTML = `${(depFoncCDF+depDevCDF).toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#ef4444;font-weight:900;"> ${(depFoncUSD+depDevUSD).toFixed(2)} USD</span>`;
                 } catch(e){}
 
+                // Injection automatisée dans le rapport de l'onglet Analyses de période
                 try {
                     if (document.getElementById('ana-ent-fonc-cdf')) {
-                        document.getElementById('ana-ent-fonc-cdf').innerText = recFoncCDF.toLocaleString() + " CDF";
-                        document.getElementById('ana-ent-fonc-usd').innerText = recFoncUSD.toFixed(2) + " USD";
-                        document.getElementById('ana-dep-fonc-cdf').innerText = depFoncCDF.toLocaleString() + " CDF";
-                        document.getElementById('ana-dep-fonc-usd').innerText = depFoncUSD.toFixed(2) + " USD";
-                        document.getElementById('ana-solde-fonc-cdf').innerText = soldeFoncCDF.toLocaleString() + " CDF";
-                        document.getElementById('ana-solde-fonc-usd').innerText = soldeFoncUSD.toFixed(2) + " USD";
-                        document.getElementById('ana-ent-dev-cdf').innerText = recDevCDF.toLocaleString() + " CDF";
-                        document.getElementById('ana-ent-dev-usd').innerText = recDevUSD.toFixed(2) + " USD";
-                        document.getElementById('ana-dep-dev-cdf').innerText = depDevCDF.toLocaleString() + " CDF";
-                        document.getElementById('ana-dep-dev-usd').innerText = depDevUSD.toFixed(2) + " USD";
-                        document.getElementById('ana-solde-dev-cdf').innerText = soldeDevCDF.toLocaleString() + " CDF";
-                        document.getElementById('ana-solde-dev-usd').innerText = soldeDevUSD.toFixed(2) + " USD";
-                        document.getElementById('ana-dep-soc-cdf').innerText = depSocCDF.toLocaleString() + " CDF";
-                        document.getElementById('ana-dep-soc-usd').innerText = depSocUSD.toFixed(2) + " USD";
+                        document.getElementById('ana-ent-fonc-cdf').innerText = recFoncCDF.toLocaleString() + " CDF"; document.getElementById('ana-ent-fonc-usd').innerText = recFoncUSD.toFixed(2) + " USD";
+                        document.getElementById('ana-dep-fonc-cdf').innerText = depFoncCDF.toLocaleString() + " CDF"; document.getElementById('ana-dep-fonc-usd').innerText = depFoncUSD.toFixed(2) + " USD";
+                        document.getElementById('ana-solde-fonc-cdf').innerText = soldeFoncCDF.toLocaleString() + " CDF"; document.getElementById('ana-solde-fonc-usd').innerText = soldeFoncUSD.toFixed(2) + " USD";
+                        document.getElementById('ana-ent-dev-cdf').innerText = recDevCDF.toLocaleString() + " CDF"; document.getElementById('ana-ent-dev-usd').innerText = recDevUSD.toFixed(2) + " USD";
+                        document.getElementById('ana-dep-dev-cdf').innerText = depDevCDF.toLocaleString() + " CDF"; document.getElementById('ana-dep-dev-usd').innerText = depDevUSD.toFixed(2) + " USD";
+                        document.getElementById('ana-solde-dev-cdf').innerText = soldeDevCDF.toLocaleString() + " CDF"; document.getElementById('ana-solde-dev-usd').innerText = soldeDevUSD.toFixed(2) + " USD";
+                        document.getElementById('ana-dep-soc-cdf').innerText = depSocCDF.toLocaleString() + " CDF"; document.getElementById('ana-dep-soc-usd').innerText = depSocUSD.toFixed(2) + " USD";
                     }
                 } catch(e){}
-
+                // 4. Traitement Restreint et Filtrage des Couches Sociales
                 try {
                     let mCouches = r9.data ? r9.data : []; let cCouches = r10.data ? r10.data : []; let aCouches = r11.data ? r11.data : [];
                     if (estCouches) {
@@ -652,19 +662,20 @@
                     if(document.getElementById('table-couches-caisse-body')) document.getElementById('table-couches-caisse-body').innerHTML = cCouches.map(c => `<tr><td>${c.date_mouvement}</td><td>${c.couche_sociale}</td><td>${c.libelle_mouvement}</td><td><b>${c.type_mouvement}</b></td><td style="color:#d97706;font-weight:bold;">${Number(c.montant).toLocaleString()} ${c.devise}</td><td>${c.cree_par||'-'}</td><td class="${hideCS}"><button onclick="supprimerLigne('caisses_couches_sociales', ${c.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="7">Aucune cotisation</td></tr>';
                 } catch(e){}
 
+                // 5. Remplissage Administratif Commun (Fidèles généraux, Biens, Docs, Projets, Programmes)
                 try {
                     let idxM=1; if(document.getElementById('table-membres-body')) document.getElementById('table-membres-body').innerHTML = r3.data.map(m => `<tr><td>${idxM++}</td><td><b>${m.nom_postnom}</b></td><td><span style="color:#059669;">${m.baptise}</span></td><td>${m.etat_civil||'-'}</td><td>${m.adresse||'-'}</td><td style="color:var(--primary);">${m.contact||'-'}</td><td>${m.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('membres', ${m.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun fidèle</td></tr>';
                     let idxB=1; if(document.getElementById('table-biens-body')) document.getElementById('table-biens-body').innerHTML = r4.data.map(b => `<tr><td>${idxB++}</td><td><b>${b.designation}</b></td><td><b>${b.quantite}</b></td><td>${b.etat}</td><td style="color:#d97706;">${b.statut_bien||'En action'}</td><td><i>📍 ${b.emplacement_bien||'-'}</i></td><td>${b.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('biens', ${b.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun bien</td></tr>';
                     let idxD=1; if(document.getElementById('table-documents-body')) document.getElementById('table-documents-body').innerHTML = r5.data.map(d => `<tr><td>${idxD++}</td><td style="color:#c084fc;"><b>${d.titre_document}</b></td><td>${d.categorie||'-'}</td><td><i>📍 ${d.lieu_conservation}</i></td><td>${d.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('documents_sacres', ${d.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="6">Aucun document</td></tr>';
                     let idxP=1; if(document.getElementById('table-projets-body')) document.getElementById('table-projets-body').innerHTML = r6.data.map(p => `<tr><td>${idxP++}</td><td><b>${p.nom_projet}</b></td><td style="color:var(--primary);">${Number(p.budget_estime_cdf).toLocaleString()} CDF</td><td>${p.responsable||'-'}</td><td><b>${p.statut}</b></td><td>${p.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('projets', ${p.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="7">Aucun projet</td></tr>';
                     if(document.getElementById('table-programmes-body')) document.getElementById('table-programmes-body').innerHTML = fProgrammes.map(pr => `<tr><td>${pr.date_culte}</td><td><b>Thème : ${pr.theme}</b></td><td>${pr.predicateur||'-'}</td><td>${pr.moderateur||'-'}</td><td>👨${pr.nb_hommes} | 👩${pr.nb_femmes} | 👧${pr.nb_enfants} | 👥${pr.nb_visiteurs||0}</td><td style="font-weight:bold;color:#0d9488;background:#f0fdfa;text-align:center;">${(Number(pr.nb_hommes)+Number(pr.nb_femmes)+Number(pr.nb_enfants)+Number(pr.nb_visiteurs||0)).toLocaleString()} Total</td><td>${pr.cree_par||'-'}</td><td class="${cHide}"><button onclick="supprimerLigne('programmes_cultes', ${pr.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun culte</td></tr>';
-                    let idxS=1; if(document.getElementById('table-social-body')) document.getElementById('table-social-body').innerHTML = r8.data.map(s => `<tr><td><b>${s.nom_complet}</b></td><td><span style="color:#a855f7;">${s.categorie}</span></td><td>${s.adresse||'-'}</td><td>${s.contact_tuteur||'-'}</td><td>${s.assistance_accordee||'-'}</td><td>${s.cree_par||'-'}</td><td class="${hideSoc}"><button onclick="supprimerLigne('assistance_sociale', ${s.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun dossier social</td></tr>';
+                    let idxS=1; if(document.getElementById('table-social-body')) document.getElementById('table-social-body').innerHTML = r8.data.map(s => `<tr><td><b>${s.nom_complet}</b></td><td><span style="color:#a855f7;">${s.categorie}</span></td><td>${s.adresse||'-'}</td><td>${s.contact_tuteur||'-'}</td><td>${s.assistance_accordee||'-'}</td><td>${s.cree_par||'-'}</td><td class="${hideSoc}"><button onclick="supprimerLigne('assistance_sociale', ${s.id})" class="btn-act" style="background:#dc2626;">Retirer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun dossier social</td></tr>';
                 } catch(e){}
 
             }); }); }); }); }); }); }); }); }); }); });
         }
 
-        // 5. PROTECTION INACTIVITÉ ET ÉTAT INITIAL DE DÉMARRAGE
+        // 5. COMPTEUR DE SÉCURITÉ INACTIVITÉ ET RECONCURRENCE DES SESSIONS
         function resetTimer() { tempsInactivite = 0; }
         document.onmousemove = resetTimer; document.onkeypress = resetTimer; document.ontouchstart = resetTimer;
         setInterval(function() { if (sessionUtilisateur) { tempsInactivite++; if (tempsInactivite >= 600) { alert("⏱️ Session verrouillée après 10 minutes d'inactivité."); deconnexion(); } } }, 1000);
