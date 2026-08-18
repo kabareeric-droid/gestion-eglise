@@ -471,14 +471,19 @@
             });
         });
 
-              // 🛡️ APPLICATION DE L'ÉTANCHÉITÉ STRICTE DES ÉCHELONS (CORRIGÉE)
+        // 🛡️ APPLICATION DE L'ÉTANCHÉITÉ STRICTE DES ÉCHELONS (VERSION UNIFIÉE ET CORRIGÉE)
         function appliquerDroitsEchelonsEtDemarrer() {
             if (!sessionUtilisateur) return;
 
             // Masquage forcé immédiat de tous les panneaux spécifiques pour nettoyer l'écran
             if(document.getElementById('panel-controle-president')) document.getElementById('panel-controle-president').classList.add('hidden');
-            if(document.getElementById('zone-caisses-leader-restreint')) document.getElementById('zone-caisses-leader-restreint').classList.add('hidden');
-            if(document.getElementById('zone-caisses-visibles')) document.getElementById('zone-caisses-visibles').classList.remove('hidden');
+            if(document.getElementById('zone-caisses-leader-restreint')) {
+                document.getElementById('zone-caisses-leader-restreint').style.display = "none";
+            }
+            if(document.getElementById('zone-caisses-visibles')) {
+                document.getElementById('zone-caisses-visibles').style.display = "block";
+                document.getElementById('zone-caisses-visibles').classList.remove('hidden');
+            }
 
             document.getElementById('section-connexion').classList.add('hidden');
             document.getElementById('section-dashboard').classList.remove('hidden');
@@ -495,17 +500,21 @@
             // --- CAS 1 : LE LEADER DE COUCHE SOCIALE ---
             if (echelon === "Couche Sociale") {
                 document.querySelectorAll('.menu-general, .menu-social-seul').forEach(b => b.classList.add('hidden'));
-                if(document.getElementById('zone-caisses-visibles')) document.getElementById('zone-caisses-visibles').classList.add('hidden');
+                if(document.getElementById('zone-caisses-visibles')) {
+                    document.getElementById('zone-caisses-visibles').style.display = "none";
+                    document.getElementById('zone-caisses-visibles').classList.add('hidden');
+                }
                 
-                // FORCE L'AFFICHAGE DU TABLEAU DE BORD ORANGE DE VOTRE DÉPARTEMENT
-                const cLeader = document.getElementById('zone-caisses-leader-restreint');
-                if(cLeader) {
-                    cLeader.classList.remove('hidden');
-                    cLeader.style.display = "block"; // <-- CETTE LIGNE AJOUTÉE FORCE L'OUVERTURE SUR SMARTPHONE
+                // FORCE L'OUVERTURE ET L'AFFICHAGE DU BLOC ORANGE SUR TOUS LES SMARTPHONES
+                if(document.getElementById('zone-caisses-leader-restreint')) {
+                    document.getElementById('zone-caisses-leader-restreint').style.display = "block";
+                    document.getElementById('zone-caisses-leader-restreint').classList.remove('hidden');
                 }
                 
                 const deptPrecise = sessionUtilisateur.departement_precise || "Général";
-                if(document.getElementById('label-couche-active')) document.getElementById('label-couche-active').innerText = idCompte + " | Département : " + deptPrecise + " 👥";
+                if(document.getElementById('label-couche-active')) {
+                    document.getElementById('label-couche-active').innerText = idCompte + " | Département : " + deptPrecise + " 👥";
+                }
                 
                 ['cm_groupe', 'ca_groupe', 'cc_groupe'].forEach(selectId => {
                     const drop = document.getElementById(selectId);
@@ -522,7 +531,10 @@
             // --- CAS 2 : LA GESTION SOCIALE ---
             } else if (echelon === "Social") {
                 document.querySelectorAll('.menu-general, .menu-couches-seul').forEach(b => b.classList.add('hidden'));
-                if(document.getElementById('zone-caisses-visibles')) document.getElementById('zone-caisses-visibles').classList.add('hidden');
+                if(document.getElementById('zone-caisses-visibles')) {
+                    document.getElementById('zone-caisses-visibles').style.display = "none";
+                    document.getElementById('zone-caisses-visibles').classList.add('hidden');
+                }
                 document.querySelectorAll('.zone-social-saisie').forEach(f => f.classList.remove('hidden'));
                 changerOnglet('tab-social');
 
