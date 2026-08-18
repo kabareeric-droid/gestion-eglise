@@ -238,6 +238,32 @@
                     <div id="stat-depenses" style="margin:2px 0 0 0; font-size:0.95rem; font-weight:900; color:#dc2626;">0 CDF<br><span style="font-size:0.85rem;color:#ef4444;font-weight:900;">0.00 USD</span></div>
                 </div>
             </div>
+        <!-- TABLEAU DE BORD FINANCIER EXCLUSIF POUR LE LEADER DE COUCHE SOCIALE -->
+        <div id="zone-caisses-leader-restreint" class="card-box hidden" style="background: var(--bg-card); padding: 0.6rem; margin-bottom: 0.5rem; border: 2px solid #d97706; display: flex; flex-direction: column; gap: 0.5rem;">
+            <p style="margin: 0; font-size: 0.85rem; font-weight: 900; color: #d97706; text-align: center;">📊 TABLEAU DE BORD FINANCIER DE VOTRE DÉPARTEMENT</p>
+            <div class="grid grid-4" style="gap: 0.4rem;">
+                <!-- Solde Interne CDF -->
+                <div class="card-stat" style="border-left-color: #d97706; background: #fffbeb; padding: 0.45rem;">
+                    <p style="margin:0; font-size:0.65rem; color:#b45309; font-weight:800;">💰 SOLDE DISPONIBLE (CDF)</p>
+                    <p id="stat-leader-solde-cdf" style="margin:2px 0 0 0; font-size:1.1rem; font-weight:900; color:#b45309;">0 CDF</p>
+                </div>
+                <!-- Solde Interne USD -->
+                <div class="card-stat" style="border-left-color: #3b82f6; background: #eff6ff; padding: 0.45rem;">
+                    <p style="margin:0; font-size:0.65rem; color:#1e40af; font-weight:800;">💵 SOLDE DISPONIBLE (USD)</p>
+                    <p id="stat-leader-solde-usd" style="margin:2px 0 0 0; font-size:1.1rem; font-weight:900; color:#1e3a8a;">0.00 USD</p>
+                </div>
+                <!-- Total Cotisations Recues -->
+                <div class="card-stat" style="border-left-color: #10b981; background: #f0fdf4; padding: 0.45rem;">
+                    <p style="margin:0; font-size:0.65rem; color:#065f46; font-weight:800;">📥 TOTAL COTISATIONS REÇUES</p>
+                    <p id="stat-leader-rec-total" style="margin:2px 0 0 0; font-size:0.9rem; font-weight:800; color:#059669;">0 Mouvements</p>
+                </div>
+                <!-- Total Sorties Interne -->
+                <div class="card-stat" style="border-left-color: #ef4444; background: #fef2f2; padding: 0.45rem;">
+                    <p style="margin:0; font-size:0.65rem; color:#991b1b; font-weight:800;">📤 TOTAL SORTIES EFFECTUÉES</p>
+                    <p id="stat-leader-dep-total" style="margin:2px 0 0 0; font-size:0.9rem; font-weight:800; color:#dc2626;">0 Mouvements</p>
+                </div>
+            </div>
+        </div>
 
             <!-- LE FILTRE CALENDRIER SE LOGE JUSTE EN DESSOUS -->
             <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; font-size: 0.85rem; padding-top: 0.4rem; border-top: 1px dashed var(--border-color);">
@@ -476,8 +502,15 @@
             if (echelon === "Couche Sociale") {
                 document.querySelectorAll('.menu-general, .menu-social-seul').forEach(b => b.classList.add('hidden'));
                 if(document.getElementById('zone-caisses-visibles')) document.getElementById('zone-caisses-visibles').classList.add('hidden');
-                if(document.getElementById('label-couche-active')) document.getElementById('label-couche-active').innerText = idCompte + " (Accès Dédié 👥)";
                 
+                // NOUVEAU : On affiche son tableau de bord financier de groupe
+                if(document.getElementById('zone-caisses-leader-restreint')) {
+                    document.getElementById('zone-caisses-leader-restreint').classList.remove('hidden');
+                }
+                
+                if(document.getElementById('label-couche-active')) document.getElementById('label-couche-active').innerText = idCompte + " (Accès Dédié 👥)";
+                // ... reste de votre code de blocage de liste déroulante ...
+
                 ['cm_groupe', 'ca_groupe', 'cc_groupe'].forEach(selectId => {
                     const drop = document.getElementById(selectId);
                     if (drop) {
@@ -677,6 +710,34 @@
                     if(document.getElementById('table-couches-activites-body')) document.getElementById('table-couches-activites-body').innerHTML = aCouches.map(a => `<tr><td>${a.date_activite}</td><td>${a.couche_sociale}</td><td><b>${a.libelle_activite}</b></td><td style="color:#0d9488;font-weight:bold;">${a.nb_presents} Présents</td><td>${a.cree_par||'-'}</td><td class="${hideCS}"><button onclick="supprimerLigne('activites_couches_sociales', ${a.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="6">Aucune activité</td></tr>';
                     if(document.getElementById('table-couches-caisse-body')) document.getElementById('table-couches-caisse-body').innerHTML = cCouches.map(c => `<tr><td>${c.date_mouvement}</td><td>${c.couche_sociale}</td><td>${c.libelle_mouvement}</td><td><b>${c.type_mouvement}</b></td><td style="color:#d97706;font-weight:bold;">${Number(c.montant).toLocaleString()} ${c.devise}</td><td>${c.cree_par||'-'}</td><td class="${hideCS}"><button onclick="supprimerLigne('caisses_couches_sociales', ${c.id})" class="btn-act" style="background:#dc2626;">🗑️ Supprimer</button></td></tr>`).join('') || '<tr><td colspan="7">Aucune cotisation</td></tr>';
                 } catch(e){}
+                                // NOUVEAU : CALCUL DE LA CAISSE EXCLUSIVE DU LEADER CONNECTÉ
+                try {
+                    let lRecCDF = 0, lRecUSD = 0, lDepCDF = 0, lDepUSD = 0;
+                    let nbRec = 0, nbDep = 0;
+
+                    // On passe au peigne fin uniquement les cotisations de son groupe (cCouches contient déjà le filtre du groupe)
+                    cCouches.forEach(mov => {
+                        const mt = Number(mov.montant) || 0;
+                        const d = mov.devise || 'CDF';
+                        if (mov.type_mouvement === "Entrée") {
+                            nbRec++;
+                            if (d === "USD") lRecUSD += mt; else lRecCDF += mt;
+                        } else if (mov.type_mouvement === "Sortie") {
+                            nbDep++;
+                            if (d === "USD") lDepUSD += mt; else lDepCDF += mt;
+                        }
+                    });
+
+                    // Calcul du reste net en caisse pour le groupe
+                    let lSoldeCDF = lRecCDF - lDepCDF;
+                    let lSoldeUSD = lRecUSD - lDepUSD;
+
+                    // Injection sécurisée dans son mini Tableau de Bord
+                    if(document.getElementById('stat-leader-solde-cdf')) document.getElementById('stat-leader-solde-cdf').innerText = lSoldeCDF.toLocaleString() + " CDF";
+                    if(document.getElementById('stat-leader-solde-usd')) document.getElementById('stat-leader-solde-usd').innerText = lSoldeUSD.toFixed(2) + " USD";
+                    if(document.getElementById('stat-leader-rec-total')) document.getElementById('stat-leader-rec-total').innerText = `+ ${lRecCDF.toLocaleString()} CDF | + ${lRecUSD.toFixed(2)} USD (${nbRec})`;
+                    if(document.getElementById('stat-leader-dep-total')) document.getElementById('stat-leader-dep-total').innerText = `- ${lDepCDF.toLocaleString()} CDF | - ${lDepUSD.toFixed(2)} USD (${nbDep})`;
+                } catch(e){}
 
                 // 5. Remplissage Administratif Commun (Fidèles généraux, Biens, Docs, Projets, Programmes)
                 try {
@@ -711,7 +772,8 @@
         setInterval(function() { if (sessionUtilisateur) { tempsInactivite++; if (tempsInactivite >= 600) { alert("⏱️ Session verrouillée après 10 minutes d'inactivité."); deconnexion(); } } }, 1000);
 
         function deconnexion() { localStorage.removeItem("eglise-session-courte"); sessionUtilisateur = null; document.getElementById('section-connexion').className = "card-box"; document.getElementById('section-connexion').classList.remove('hidden'); document.getElementById('section-dashboard').classList.add('hidden'); document.body.style.display = "flex"; }
-        
+                if(document.getElementById('zone-caisses-leader-restreint')) document.getElementById('zone-caisses-leader-restreint').classList.add('hidden');
+
         (function() {
             const savedTheme = localStorage.getItem("eglise-theme-actif") || "theme-bleu";
             document.body.className = ""; document.body.classList.add(savedTheme);
