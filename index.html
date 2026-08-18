@@ -604,11 +604,12 @@
                 // Calculs et rafraîchissement instantané des 4 compteurs cardinaux
                 let soldeFoncCDF = recFoncCDF - depFoncCDF; let soldeFoncUSD = recFoncUSD - depFoncUSD;
                 let soldeDevCDF = recDevCDF - depDevCDF; let soldeDevUSD = recDevUSD - depDevUSD;
+                // Mise à jour des 4 compteurs principaux avec les identifiants HTML exacts
                 document.getElementById('stat-caisse-fonc').innerHTML = `${soldeFoncCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#2563eb;">${soldeFoncUSD.toFixed(2)} USD</span>`;
                 document.getElementById('stat-caisse-dev').innerHTML = `${soldeDevCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#8b5cf6;">${soldeDevUSD.toFixed(2)} USD</span>`;
-                document.getElementById('stat-entrees').innerHTML = `${(recFoncCDF+recDevCDF).toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#10b981;"> ${(recFoncUSD+recDevUSD).toFixed(2)} USD</span>`;
-                document.getElementById('stat-depenses').innerHTML = `${(depFoncCDF+depDevCDF).toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#ef4444;"> ${(depFoncUSD+depDevUSD).toFixed(2)} USD</span>`;
-                // 3. RAPPORTS ANALYTIQUES DU RESTE DE LA PÉRIODE DEMANDÉE
+                document.getElementById('stat-entrees').innerHTML = `${totalRecCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#10b981;">${totalRecUSD.toFixed(2)} USD</span>`;
+                document.getElementById('stat-depenses').innerHTML = `${totalDepCDF.toLocaleString()} CDF<br><span style="font-size:0.85rem;color:#ef4444;">${totalDepUSD.toFixed(2)} USD</span>`;
+
                 document.getElementById('ana-ent-fonc-cdf').innerText = recFoncCDF.toLocaleString() + " CDF";
                 document.getElementById('ana-ent-fonc-usd').innerText = recFoncUSD.toFixed(2) + " USD";
                 document.getElementById('ana-dep-fonc-cdf').innerText = depFoncCDF.toLocaleString() + " CDF";
