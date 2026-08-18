@@ -655,7 +655,7 @@
                ; document.getElementById('table-social-body').innerHTML = r8.data.map(s => `<tr><td><b>${s.nom_complet}</b></td><td><span style="color:#a855f7;">${s.categorie}</span></td><td>${s.adresse||'-'}</td><td>${s.contact_tuteur||'-'}</td><td>${s.assistance_accordee||'-'}</td><td>${s.cree_par||'-'}</td><td class="${hideSoc}"><button onclick="supprimerLigne('assistance_sociale', ${s.id})" class="btn-act" style="background:#dc2626;">🗑️ Retirer</button></td></tr>`).join('') || '<tr><td colspan="8">Aucun dossier social enregistré</td></tr>';
             }); }); }); }); }); }); }); }); }); }); });
         }
-        // 🔒 SAUVEGARDE DES PARAMÈTRES DU PRÉSIDENT DANS LE CLOUD SUPABASE
+       // 🔒 SAUVEGARDE DES PARAMÈTRES DU PRÉSIDENT ET FERMETURE AUTOMATIQUE
         function sauvegarderParametresPresident() {
             if (!sessionUtilisateur || sessionUtilisateur.echelon !== "Comité") return;
             const up = {
@@ -664,6 +664,7 @@
                 mois_verrouille: document.getElementById('cfg_verrou').value
             };
             supabaseClient.from('config_eglise').insert([{ id: 1, ...up }]).then(() => {
+                fermerMenuControle(); // <-- CETTE LIGNE AJOUTÉE FERME LE MENU APRÈS CHANGEMENT
                 chargerDonneesTableaux();
             });
         }
@@ -690,6 +691,9 @@
                 return true;
             }
             return false;
+        }
+                function fermerMenuControle() { 
+            document.getElementById('panel-controle-president').classList.add('hidden'); 
         }
         // AMBIANCE INITIALE DU SYSTEME DE COULEURS ET DECONNEXION
         function deconnexion() { localStorage.removeItem("eglise-session-courte"); sessionUtilisateur = null; document.getElementById('section-connexion').className = "card-box"; document.getElementById('section-connexion').classList.remove('hidden'); document.getElementById('section-dashboard').classList.add('hidden'); document.body.style.display = "flex"; }
